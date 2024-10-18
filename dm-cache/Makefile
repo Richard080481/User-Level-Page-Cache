@@ -20,6 +20,9 @@ C_SRCS := \
     ./lib/ssd_cache_target.c \
     ./lib/ssd_cache_mapping.c \
 
+# Ensure to generate object files from C source files
+C_OBJS := $(C_SRCS:.c=.o)
+
 CFLAGS += -I$(abspath $(CURDIR)/inc)
 CFLAGS += -g -O2
 
@@ -31,5 +34,11 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 .PHONY: clean
 clean:
 	@echo "Cleaning up..."
-	rm -f $(APP) $(C_SRCS:.c=.o)
-	rm -f $(APP) $(C_SRCS:.c=.d)
+	rm -f $(APP) $(C_OBJS) $(C_SRCS:.c=.d)
+
+# Default target to build the application
+.PHONY: all
+all: $(APP)
+
+$(APP): $(C_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
