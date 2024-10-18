@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "spdk.h": "c",
+        "shm.h": "c"
+    }
+}
