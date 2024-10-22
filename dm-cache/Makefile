@@ -10,15 +10,16 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 APP = app
 
 C_SRCS := \
-    ./testing.c \
-    ./lib/pio.c \
-    ./lib/shm.c \
-    ./lib/spdk.c \
-    ./lib/atomic.c \
-    ./lib/work_queue.c \
-    ./lib/ssd_cache_api.c  \
-    ./lib/ssd_cache_target.c \
-    ./lib/ssd_cache_mapping.c \
+$(abspath $(CURDIR)/testing.c) \
+$(abspath $(CURDIR)/lib/pio.c) \
+$(abspath $(CURDIR)/lib/shm.c) \
+$(abspath $(CURDIR)/lib/spdk.c) \
+$(abspath $(CURDIR)/lib/atomic.c) \
+$(abspath $(CURDIR)/lib/work_queue.c) \
+$(abspath $(CURDIR)/lib/ssd_cache_api.c)  \
+$(abspath $(CURDIR)/lib/ssd_cache_target.c) \
+$(abspath $(CURDIR)/lib/ssd_cache_mapping.c) \
+
 
 # Ensure to generate object files from C source files
 C_OBJS := $(C_SRCS:.c=.o)
@@ -29,16 +30,3 @@ CFLAGS += -g -O2
 SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
-
-# Add a clean target
-.PHONY: clean
-clean:
-	@echo "Cleaning up..."
-	rm -f $(APP) $(C_OBJS) $(C_SRCS:.c=.d)
-
-# Default target to build the application
-.PHONY: all
-all: $(APP)
-
-$(APP): $(C_OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
