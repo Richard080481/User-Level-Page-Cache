@@ -4,6 +4,10 @@
 #include <cache_api.h>
 #include <spdk.h>
 
+ struct page{
+	unsigned flag;
+ };
+
 /**
  * @brief Init share memory, wakeup workers
  * @return 0, if success
