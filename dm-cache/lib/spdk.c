@@ -91,6 +91,7 @@ void free_dma_buffer(void *dma_buf) { spdk_free(dma_buf); }
 
 int init_spdk(void) {
     struct spdk_env_opts opts;
+    opts.opts_size = sizeof(struct spdk_env_opts);
     spdk_env_opts_init(&opts);
     parse_args(&opts);
     opts.name = "udm-cache-spdk";
