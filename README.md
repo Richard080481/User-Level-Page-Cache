@@ -1,5 +1,18 @@
 # Development Log
 
+## Date: 2024-10-23
+
+### Today's Progress
+- Fix dependency problem while executing make in page-cache.
+- Implement init_page_cache() and exit_page_cache().
+- Add struct page.
+- Add a .gitignore file.
+
+### Plans for Tomorrow
+- Implement the functions in upage.h.
+- Add a prototype of read and write page cache.
+- Implement read and write page cache.
+
 ## Date: 2024-10-18
 
 ### Today's Progress
