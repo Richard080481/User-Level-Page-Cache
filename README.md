@@ -1,5 +1,19 @@
 # Development Log
 
+## Date: 2024-11-3
+
+### Today's Progress
+- Implemeant page_cache_write, move_to_lru_head, alloc_page.
+- Modify the struct of page.
+
+### Issues Encountered
+- The way to record the page index.
+- The allocate page function needs to call the function create_pio, but create_pio requires the page index as a parameter.
+  
+### Plans for Tomorrow
+- Implement page index recording.
+- Implement read page cache.
+
 ## Date: 2024-10-23
 
 ### Today's Progress
