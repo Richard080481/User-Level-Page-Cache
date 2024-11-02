@@ -1,12 +1,29 @@
 #ifndef USER_PAGE_CACHE
 #define USER_PAGE_CACHE
+#define CACHE_SIZE 1000
+#define FILE_NAME "pio_file"
 
 #include <cache_api.h>
 #include <spdk.h>
 
- struct page{
-	unsigned flag;
- };
+typedef struct PAGE {
+    unsigned flag;
+    void *data_addr;
+    struct PAGE *prev;
+    struct PAGE *next;
+}page;
+
+enum pageflags {
+    PG_locked = 0x01,     
+    PG_dirty = 0x02,         
+    PG_lru = 0x04,        
+};
+
+struct lru_cache {
+    page *head;  
+    page *tail;
+    int nr_pages;       
+};
 
 /**
  * @brief Init share memory, wakeup workers
@@ -47,4 +64,23 @@ void force_exit_page_cache(void);
  * @return No return value
  */
 void info_page_cache(void);
+
+/**
+ * @brief Allocate a new page
+ * @return Page's address, if success
+ *         NULL, if fail
+ */
+page* alloc_page(void);
+
+/**
+ * @brief Move a page to the head of the LRU list
+ * @return No return value
+ */
+void move_to_lru_head(page *page);
+
+/**
+ * @brief Write to page cache
+ * @return No return value
+ */
+void page_cache_write(char *data);
 #endif
