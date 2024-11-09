@@ -1,9 +1,14 @@
 # Development Log
 
-## Date: 2024-11-3
+## Date: 2024-11-9
 
 ### Today's Progress
-- Implemeant page_cache_write, move_to_lru_head, alloc_page.
+- Add make cleanall to delete *.o and *.d file.
+
+## Date: 2024-11-3 Bunny
+
+### Today's Progress
+- Implement page_cache_write, move_to_lru_head, alloc_page.
 - Modify the struct of page.
 
 ### Issues Encountered
@@ -14,7 +19,7 @@
 - Implement page index recording.
 - Implement read page cache.
 
-## Date: 2024-10-23
+## Date: 2024-10-23 Bunny
 
 ### Today's Progress
 - Fix dependency problem while executing make in page-cache.
@@ -27,7 +32,7 @@
 - Add a prototype of read and write page cache.
 - Implement read and write page cache.
 
-## Date: 2024-10-18
+## Date: 2024-10-18 Richard
 
 ### Today's Progress
 - Add Makefile for page-cache and make it call the dm-cache makefile.
@@ -38,7 +43,7 @@
 
 ### Plans for Tomorrow
 - Fix dependency problem to successfully execute Makefile.
-- When dependecy problem fix, implement init_page_cache().
+- When dependency problem fix, implement init_page_cache().
 
 ### Reflections and Learnings
 - REMEMBER!!! to use dma_malloc() in spdk.
