@@ -27,18 +27,18 @@ int exit_page_cache(void)
         if (lru_cache.tail->prev != NULL) lru_cache.tail->prev->next = NULL;
         lru_cache.tail = lru_cache.tail->prev;
         spdk_free(freePage);
-        lru_cache.nr_pages--;        
+        lru_cache.nr_pages--;
     }
 
     exit_ssd_cache();
     return 0;
 }
 
-page* alloc_page(void) 
+page* alloc_page(void)
 {
     /*(not finished yet!)*/
     /*if (lru_cache.nr_pages > CACHE_SIZE) //the number of pages reaches the maximum limit, do write-back
-    {    
+    {
         page *evict = lru_cache.tail;
         if (evict) {
 
@@ -74,7 +74,7 @@ void move_to_lru_head(page *page)
     if (!lru_cache.tail) lru_cache.tail = page;
 }
 
-void page_cache_write(char *data) 
+void page_cache_write(char *data)
 {
     unsigned int len = strlen(data);
     unsigned int data_offset = 0;

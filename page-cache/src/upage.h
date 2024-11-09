@@ -14,15 +14,15 @@ typedef struct PAGE {
 }page;
 
 enum pageflags {
-    PG_locked = 0x01,     
-    PG_dirty = 0x02,         
-    PG_lru = 0x04,        
+    PG_locked = 0x01,
+    PG_dirty = 0x02,
+    PG_lru = 0x04,
 };
 
 struct lru_cache {
-    page *head;  
+    page *head;
     page *tail;
-    int nr_pages;       
+    int nr_pages;
 };
 
 /**
