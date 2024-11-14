@@ -4,101 +4,162 @@
 #include <string.h>
 #include <error.h>
 
-struct lru_cache lru_cache;
-unsigned int current_offset = 0;
+struct lru_cache lru_cache = {NULL, NULL, 0};
+page* mem_map;
+void* phys_base;
+struct page_free_list free_list = {NULL, 0};
 
 int init_page_cache(void)
 {
-    if(init_ssd_cache())
+    force_exit_ssd_cache();
+    if (init_ssd_cache())
     {
         perror("Error init ssd cache\n");
 	return 1;
     }
 
-    return 0;
+    mem_map = (page*)spdk_zmalloc(CACHE_SIZE * sizeof(page), 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE); // allocate space for struct PAGE
+    phys_base =  spdk_zmalloc(CACHE_SIZE * PAGE_SIZE, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 
+    /* put all free pages int free list*/
+    for (int i = 0;i < CACHE_SIZE;i++)
+    {
+        mem_map[i].next = free_list.head;
+        if (free_list.head)
+        {
+            free_list.head->prev = &mem_map[i];
+        }
+        free_list.head = &mem_map[i];
+
+        free_list.nr_free++;
+    }
+    return 0;
 }
 
 int exit_page_cache(void)
 {
-    if(lru_cache.nr_pages != 0)
-    {
-        page *freePage = lru_cache.tail;
-        if (lru_cache.tail->prev != NULL) lru_cache.tail->prev->next = NULL;
-        lru_cache.tail = lru_cache.tail->prev;
-        spdk_free(freePage);
-        lru_cache.nr_pages--;
-    }
-
+    spdk_free(mem_map);
+    spdk_free(phys_base);
     exit_ssd_cache();
     return 0;
 }
 
+void write_pio(page* p)
+{
+    void* page_data_addr = ((char*)phys_base) + ((p - mem_map) * PAGE_SIZE);
+    operate operation = WRITE;
+    struct pio* head = create_pio(p->path_name, 0, p->index, operation, page_data_addr, 1);//submit pio to write the page into ssd, but page index is not set yet
+    submit_pio(head);
+    free_pio(head);
+}
+
+void read_pio(page* p)
+{
+    void* page_data_addr = ((char*)phys_base) + ((p - mem_map) * PAGE_SIZE);
+    operate operation = READ;
+    struct pio* head = create_pio(p->path_name, 0, p->index, operation, page_data_addr, 1);//submit pio to write the page into ssd, but page index is not set yet
+    submit_pio(head);
+    free_pio(head);
+}
+
 page* alloc_page(void)
 {
-    /*(not finished yet!)*/
-    /*if (lru_cache.nr_pages > CACHE_SIZE) //the number of pages reaches the maximum limit, do write-back
+
+    if (free_list.nr_free == 0) //the number of free page is zero, do write-back
     {
-        page *evict = lru_cache.tail;
-        if (evict) {
+        page* evict = lru_cache.tail;
+        evict->prev->next = NULL;
+        lru_cache.tail = evict->prev;
 
-            if (lru_cache.tail->prev) lru_cache.tail->prev->next = NULL;
-            lru_cache.tail = lru_cache.tail->prev;
+        write_pio(evict);// write the page into ssd
+        free_page(evict);// free the page
 
-            struct pio* head = create_pio(FILE_NAME, 0, page_index, READ, evict, 1);//submit pio to write evict page into ssd, but page index is not set yet
-            submit_pio(head);
-            free_pio(head);
+        lru_cache.nr_pages--;
 
-            spdk_free(evict);
-            cache.nr_pages--;
-        }
-    }*/
-
-    page *newPage = (page*)spdk_zmalloc(PAGE_SIZE, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
-    if (!newPage) {
-        perror("Failed to allocate new page");
-        return NULL;
     }
 
-    newPage->flag = 0;
-    lru_cache.nr_pages++;
+    /* allocate a new page from the head of free list */
+    page* new_page = free_list.head;
+    free_list.head = new_page->next;
+    if (free_list.head)
+    {
+        free_list.head->prev = NULL;
+    }
+    free_list.nr_free--;
 
-    return newPage;
+    if(!new_page)
+    {
+        printf("Error: allocate a page failed\n");
+    }
+
+    return new_page;
 }
 
-void move_to_lru_head(page *page)
+void free_page(page* p)
 {
-    page->next = lru_cache.head;
-    if (lru_cache.head) lru_cache.head->prev = page;
-    lru_cache.head = page;
-    if (!lru_cache.tail) lru_cache.tail = page;
+    /* move page to the head of free list */
+    p->next = free_list.head;
+    if (free_list.head)
+    {
+        free_list.head->prev = p;
+    }
+    free_list.head = p;
+
+    /* clear all data in the page */
+    p->prev = NULL;
+    p->next = NULL;
+    p->path_name = NULL;
+    p->index = 0;
+    p->flag = 0;
+
+    free_list.nr_free++;
 }
 
-void page_cache_write(char *data)
+void move_to_lru_head(page* p)
 {
-    unsigned int len = strlen(data);
+    p->flag |= PG_lru;
+
+    p->next = lru_cache.head;
+    if (lru_cache.head) lru_cache.head->prev = p;
+    lru_cache.head = p;
+    if (lru_cache.tail == NULL) lru_cache.tail = p;
+}
+
+int page_cache_write(char* path_name, char* data)
+{
+    unsigned int data_len = strlen(data);
     unsigned int data_offset = 0;
-
-    while (data_offset < len)
+    unsigned int index = 0;
+    while (data_offset < data_len) //The data has not yet been written
     {
-        page *newPage = alloc_page();
-        if(!newPage) return;
+        page* new_page = alloc_page();
+        if (!new_page) return -1; //failed to get a new page, return
 
-        unsigned int copyLen = (len - data_offset) < PAGE_SIZE ? (len - data_offset) : PAGE_SIZE;// the number of bytes to be written this time
-        memcpy(newPage, data + data_offset, copyLen);
-        newPage->flag |= PG_dirty;
-        move_to_lru_head(newPage);
-        data_offset += copyLen;
+        /* setting infomation of new page */
+        new_page->flag |= PG_dirty;
+        new_page->index = index;
+        new_page->path_name = path_name;
+
+        /* write the data into new page */
+        unsigned int copy_len = (data_len - data_offset < PAGE_SIZE) ? (data_len - data_offset) : PAGE_SIZE;// the number of bytes to be written this time
+        void* page_data_addr = ((char*)phys_base) + ((new_page - mem_map) * PAGE_SIZE);
+        memcpy(page_data_addr, data + data_offset, copy_len);
+
+        move_to_lru_head(new_page);
+        data_offset += copy_len;
+        index++;
+
     }
-    return;
+
+    return 0;
 }
 
-int main(void)
+int main(int argc, char* argv[])
 {
     init_page_cache();
-    void *temp = malloc(PAGE_SIZE);
-    sprintf(temp, "%d", rand() % 1000000);
-    page_cache_write(temp);
+    void* temp_write = malloc(PAGE_SIZE);
+    sprintf(temp_write, "%d", rand() % 1000000);
+    page_cache_write("test_file", temp_write);
     exit_page_cache();
     return 0;
 }
