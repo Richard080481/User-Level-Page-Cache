@@ -1,6 +1,16 @@
 # Development Log
 
-## Date: 2024-11-9
+## Date: 2024-11-14 Richard & Bonnie
+
+### Today's Progress
+- Implement read_pio and write_pio
+
+
+### Plans for Tomorrow
+- Add total file length in first page.
+- Make sure there is only one page cache in the operating system.
+
+## Date: 2024-11-9 Richard
 
 ### Today's Progress
 - Add make cleanall to delete *.o and *.d file.
