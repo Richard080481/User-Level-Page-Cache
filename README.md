@@ -5,7 +5,7 @@
 ### Today's Progress
 - Add make cleanall to delete *.o and *.d file.
 
-## Date: 2024-11-3 Bunny
+## Date: 2024-11-3 Bonnie
 
 ### Today's Progress
 - Implement page_cache_write, move_to_lru_head, alloc_page.
@@ -14,12 +14,12 @@
 ### Issues Encountered
 - The way to record the page index.
 - The allocate page function needs to call the function create_pio, but create_pio requires the page index as a parameter.
-  
+
 ### Plans for Tomorrow
 - Implement page index recording.
 - Implement read page cache.
 
-## Date: 2024-10-23 Bunny
+## Date: 2024-10-23 Bonnie
 
 ### Today's Progress
 - Fix dependency problem while executing make in page-cache.
