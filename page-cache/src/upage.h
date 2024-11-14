@@ -1,16 +1,16 @@
 #ifndef USER_PAGE_CACHE
 #define USER_PAGE_CACHE
 #define CACHE_SIZE 1000
-#define FILE_NAME "pio_file"
 
 #include <cache_api.h>
 #include <spdk.h>
 
 typedef struct PAGE {
     unsigned flag;
-    void *data_addr;
-    struct PAGE *prev;
-    struct PAGE *next;
+    char* path_name;
+    unsigned int index;
+    struct PAGE* prev;
+    struct PAGE* next;
 }page;
 
 enum pageflags {
@@ -20,9 +20,14 @@ enum pageflags {
 };
 
 struct lru_cache {
-    page *head;
-    page *tail;
+    page* head;
+    page* tail;
     int nr_pages;
+};
+
+struct page_free_list {
+    page* head;
+    int nr_free;
 };
 
 /**
@@ -33,7 +38,7 @@ struct lru_cache {
 int init_page_cache(void);
 
 /**
- * @brief Unlink share memory, shotdown workers
+ * @brief Unlink share memory, shutdown workers
  * @return 0, if success
  *         non-zero, if fail
  */
@@ -73,14 +78,34 @@ void info_page_cache(void);
 page* alloc_page(void);
 
 /**
+ * @brief Free the page, put it back to free page list
+ * @return No return value
+ */
+void free_page(page* p);
+
+/**
  * @brief Move a page to the head of the LRU list
  * @return No return value
  */
-void move_to_lru_head(page *page);
+void move_to_lru_head(page* page);
 
 /**
  * @brief Write to page cache
+ * @return 0, if success
+ *         non-zero, if fail
+ */
+int page_cache_write(char* path_name, char* data);
+
+/**
+ * @brief send pio(write) to dm-cache
  * @return No return value
  */
-void page_cache_write(char *data);
+void write_pio(page* p);
+
+/**
+ * @brief send pio(read) to dm-cache
+ * @return No return value
+ */
+void read_pio(page* p);
 #endif
+
