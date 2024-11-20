@@ -177,6 +177,112 @@ int page_cache_write(char* path_name, char* data)
     return 0;
 }
 
+// int page_cache_read(char* path_name, unsigned int page_index, void* buffer)
+// {
+//     const unsigned int DATA_PAGES = 0;
+
+//     page* target_page = hash_table_lookup(path_name, page_index);
+
+//     if (target_page)// if the page in the hash table
+//     {
+//         move_to_lru_head(target_page);
+
+//         /*write the data into user's buffer*/
+//         void* page_data_addr = ((char*)phys_base) + ((target_page - mem_map) * PAGE_SIZE);
+//         memcpy(buffer, page_data_addr, PAGE_SIZE);
+//     }
+//     else
+//     {
+//         /*if the page is not in the page cache*/
+//         target_page = alloc_page();
+//         if (unlikely(!target_page)) {return -1;} // failed to get a new page, return
+
+//         /*setting infomation of new page */
+//         target_page->path_name = path_name;
+//         target_page->index = page_index;
+//         target_page->flag |= PG_cache;
+
+//         read_pio(target_page);
+//         move_to_lru_head(target_page);
+//         hash_table_insert(path_name, page_index, target_page);
+//         move_to_lru_head(target_page);
+
+//         /*write the data into user's buffer*/
+//         void* page_data_addr = ((char*)phys_base) + ((target_page - mem_map) * PAGE_SIZE);
+//         memcpy(buffer, page_data_addr, PAGE_SIZE);
+//     }
+
+//     return 0;
+// }
+
+// unsigned int hash_function(char* path_name, unsigned int page_index)
+// {
+//     unsigned int hash = 0;
+//     while (*path_name)
+//     {
+//         hash = (hash * 31) + *path_name++;
+//     }
+//     return (hash + page_index) % HASH_SIZE;
+// }
+
+// page* hash_table_lookup(char* path_name, unsigned int page_index)
+// {
+//     unsigned int hash_index = hash_function(path_name, page_index);
+//     hash_entry* entry = hash_table[hash_index];
+
+//     /*Check if the entry belongs to this page; if not, move on to the next entry*/
+//     while (entry)
+//     {
+//         if (strcmp(entry->path_name, path_name) == 0 && entry->page_index == page_index)
+//         {
+//             return entry->page_ptr;
+//         }
+//         entry = entry->next;
+//     }
+
+//     return NULL;
+// }
+
+// void hash_table_insert(char* path_name, unsigned int page_index, page* page_ptr)
+// {
+//     unsigned int hash_index = hash_function(path_name, page_index);
+//     hash_entry* new_entry = (hash_entry*)malloc(sizeof(hash_entry));
+
+//     /*Set the information in the hash entry*/
+//     new_entry->path_name = strdup(path_name);
+//     new_entry->page_index = page_index;
+//     new_entry->page_ptr = page_ptr;
+//     new_entry->next = hash_table[hash_index];
+//     hash_table[hash_index] = new_entry;
+// }
+
+// void hash_table_remove(char* path_name, unsigned int page_index)
+// {
+//     unsigned int hash_index = hash_function(path_name, page_index);
+//     hash_entry* entry = hash_table[hash_index];
+//     hash_entry* prev = NULL;
+
+//     /*Check if the entry belongs to this page; if not, move on to the next entry*/
+//     while (entry)
+//     {
+//         if (strcmp(entry->path_name, path_name) == 0 && entry->page_index == page_index)//the entry belongs to this page
+//         {
+//             if (prev)
+//             {
+//                 prev->next = entry->next;
+//             }
+//             else
+//             {
+//                 hash_table[hash_index] = entry->next;
+//             }
+//             free(entry);
+//             return;
+//         }
+//         prev = entry;
+//         entry = entry->next;
+//     }
+// }
+
 int main(int argc, char* argv[])
 {
     init_page_cache();
