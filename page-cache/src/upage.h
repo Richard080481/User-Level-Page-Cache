@@ -7,6 +7,7 @@
 #include <spdk.h>
 #include "types.h"
 #include "lru.h"
+#include "upio.h"
 
 /**
  * @brief Init share memory, wakeup workers
