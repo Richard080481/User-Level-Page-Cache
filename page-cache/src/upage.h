@@ -1,44 +1,12 @@
 #ifndef USER_PAGE_CACHE
 #define USER_PAGE_CACHE
-#define CACHE_SIZE 1000
-#define PAGE_HEADER_SIZE sizeof(header)
+
+
 
 #include <cache_api.h>
 #include <spdk.h>
-
-typedef struct Header
-{
-    unsigned int PAGES;         // Length of the data in the package
-} header;
-
-typedef struct PAGE
-{
-    unsigned flag;
-    char* path_name;
-    unsigned int index;
-    struct PAGE* prev;
-    struct PAGE* next;
-}page;
-
-enum pageflags
-{
-    PG_locked = 0x01,
-    PG_dirty = 0x02,
-    PG_lru = 0x04,
-};
-
-typedef struct lru_cache
-{
-    page* head;
-    page* tail;
-    int nr_pages;
-} lru_cache;
-
-typedef struct page_free_list
-{
-    page* head;
-    int nr_free;
-} page_free_list;
+#include "types.h"
+#include "lru.h"
 
 /**
  * @brief Init share memory, wakeup workers
@@ -94,12 +62,6 @@ page* alloc_page(void);
 void free_page(page* p);
 
 /**
- * @brief Move a page to the head of the LRU list
- * @return No return value
- */
-void add_to_lru_head(page* page);
-
-/**
  * @brief Write to page cache
  * @return 0, if success
  *         non-zero, if fail
@@ -118,4 +80,3 @@ void write_pio(page* p);
  */
 void read_pio(page* p);
 #endif
-

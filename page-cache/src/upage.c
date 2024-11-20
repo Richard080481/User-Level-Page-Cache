@@ -5,8 +5,10 @@
 #include <string.h>
 #include <error.h>
 
-#define ENABLE_BRANCH_HINTS
+#define PAGE_HEADER_SIZE sizeof(header)
+#define CACHE_SIZE 1000
 
+#define ENABLE_BRANCH_HINTS
 #ifdef ENABLE_BRANCH_HINTS
     // Define likely and unlikely macros
     #define likely(x)   __builtin_expect(!!(x), 1)
@@ -127,16 +129,6 @@ void free_page(page* p)
     p->flag = 0;
 
     free_list.nr_free++;
-}
-
-void add_to_lru_head(page* p)
-{
-    p->flag |= PG_lru;
-
-    p->next = lru_list.head;
-    if (lru_list.head) {lru_list.head->prev = p;}
-    lru_list.head = p;
-    if (lru_list.tail == NULL) {lru_list.tail = p;}
 }
 
 int page_cache_write(char* path_name, char* data)
