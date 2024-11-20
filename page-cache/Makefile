@@ -11,7 +11,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 APP = app
 
 C_SRCS := \
-./src/upage.c \
+$(wildcard ./src/*.c) \
 $(wildcard $(DMCACHE_DIR)/lib/*.c) \
 
 CFLAGS += -I$(abspath $(CURDIR)/../dm-cache/inc)

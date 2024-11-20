@@ -18,10 +18,9 @@
 #endif
 
 
-page* lru_head;
 page* mem_map;
-void* phys_base;
-struct lru_cache lru_cache = {lru_head, NULL, 0};
+void* PHYS_BASE;
+lru_cache lru_list = {NULL, NULL, 0}; // warning!!!
 struct page_free_list free_list = {NULL, 0};
 
 int init_page_cache(void)
@@ -34,7 +33,7 @@ int init_page_cache(void)
     }
 
     mem_map = (page*)umalloc_share(CACHE_SIZE * sizeof(page)); // allocate space for struct PAGE
-    phys_base =  umalloc_share(CACHE_SIZE * PAGE_SIZE);
+    PHYS_BASE =  umalloc_share(CACHE_SIZE * PAGE_SIZE);
 
     /* put all free pages int free list */
     for (int i = 0;i < CACHE_SIZE;i++)
@@ -54,7 +53,7 @@ int init_page_cache(void)
 int exit_page_cache(void)
 {
     ufree(mem_map);
-    ufree(phys_base);
+    ufree(PHYS_BASE);
     exit_ssd_cache();
     return 0;
 }
@@ -82,14 +81,14 @@ page* alloc_page(void)
 
     if (free_list.nr_free == 0) //the number of free page is zero, do write-back
     {
-        page* evict = lru_cache.tail;
+        page* evict = lru_list.tail;
         evict->prev->next = NULL;
-        lru_cache.tail = evict->prev;
+        lru_list.tail = evict->prev;
 
         write_pio(evict); // write the page into ssd
         free_page(evict); // free the page
 
-        lru_cache.nr_pages--;
+        lru_list.nr_pages--;
 
     }
 
@@ -134,10 +133,10 @@ void add_to_lru_head(page* p)
 {
     p->flag |= PG_lru;
 
-    p->next = lru_cache.head;
-    if (lru_cache.head) {lru_cache.head->prev = p;}
-    lru_cache.head = p;
-    if (lru_cache.tail == NULL) {lru_cache.tail = p;}
+    p->next = lru_list.head;
+    if (lru_list.head) {lru_list.head->prev = p;}
+    lru_list.head = p;
+    if (lru_list.tail == NULL) {lru_list.tail = p;}
 }
 
 int page_cache_write(char* path_name, char* data)
