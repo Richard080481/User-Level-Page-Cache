@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "spdk.h": "c",
-        "shm.h": "c"
-    }
+        "shm.h": "c",
+        "upage.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }

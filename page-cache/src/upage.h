@@ -1,6 +1,7 @@
 #ifndef USER_PAGE_CACHE
 #define USER_PAGE_CACHE
 #define CACHE_SIZE 1000
+#define PAGE_HEADER_SIZE 10
 
 #include <cache_api.h>
 #include <spdk.h>
