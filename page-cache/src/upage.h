@@ -8,7 +8,7 @@
 
 typedef struct
 {
-    const unsigned int PAGES;         // Length of the data in the package
+    unsigned int PAGES;         // Length of the data in the package
 } Header;
 
 typedef struct PAGE
