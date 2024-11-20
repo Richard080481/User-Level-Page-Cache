@@ -1,4 +1,5 @@
 #include "upage.h"
+#include "umalloc.h"
 #include <spdk/env.h>
 #include <spdk/memory.h>
 #include <string.h>
@@ -16,9 +17,11 @@
     #define unlikely(x) (x)
 #endif
 
-struct lru_cache lru_cache = {NULL, NULL, 0};
+
+page* lru_head;
 page* mem_map;
-void* PHYS_BASE;
+void* phys_base;
+struct lru_cache lru_cache = {lru_head, NULL, 0};
 struct page_free_list free_list = {NULL, 0};
 
 int init_page_cache(void)
@@ -27,11 +30,11 @@ int init_page_cache(void)
     if (init_ssd_cache())
     {
         perror("Error init ssd cache\n");
-	return 1;
+	    return 1;
     }
 
-    mem_map = (page*)spdk_zmalloc(CACHE_SIZE * sizeof(page), 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE); // allocate space for struct PAGconst E
-    PHYS_BASE =  spdk_zmalloc(CACHE_SIZE * PAGE_SIZE, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+    mem_map = (page*)umalloc_share(CACHE_SIZE * sizeof(page)); // allocate space for struct PAGE
+    phys_base =  umalloc_share(CACHE_SIZE * PAGE_SIZE);
 
     /* put all free pages int free list */
     for (int i = 0;i < CACHE_SIZE;i++)
@@ -50,8 +53,8 @@ int init_page_cache(void)
 
 int exit_page_cache(void)
 {
-    spdk_free(mem_map);
-    spdk_free(PHYS_BASE);
+    ufree(mem_map);
+    ufree(phys_base);
     exit_ssd_cache();
     return 0;
 }

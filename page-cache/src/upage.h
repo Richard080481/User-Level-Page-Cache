@@ -27,18 +27,18 @@ enum pageflags
     PG_lru = 0x04,
 };
 
-struct lru_cache
+typedef struct lru_cache
 {
     page* head;
     page* tail;
     int nr_pages;
-};
+} lru_cache;
 
-struct page_free_list
+typedef struct page_free_list
 {
     page* head;
     int nr_free;
-};
+} page_free_list;
 
 /**
  * @brief Init share memory, wakeup workers
