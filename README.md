@@ -6,9 +6,19 @@
 - Implement page_cache_write with header function.
 - Create umalloc.h for spdk_zmalloc()
 - Set up header struct.
+- implement likely() and unlikely() for compiler
 
 ### Plans for Tomorrow
-- Design link_page_cache function.
+- Design link_page_cache and unlink_page_cache function.
+- Read implementation
+- hash implementation (only path_name in hash table)
+- file header struct in lru implementation
+- lru operation implementation
+- pio append implementation
+- write implementation accommodate with lru
+- separate different function into different file and header
+- add more comment on source code
+- add comment on header file of *.h
 
 ### Plans for Tomorrow
 - Add total file length in first page.
