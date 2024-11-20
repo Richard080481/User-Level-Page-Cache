@@ -97,7 +97,7 @@ void free_page(page* p);
  * @brief Move a page to the head of the LRU list
  * @return No return value
  */
-void move_to_lru_head(page* page);
+void add_to_lru_head(page* page);
 
 /**
  * @brief Write to page cache

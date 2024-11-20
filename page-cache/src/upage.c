@@ -61,7 +61,7 @@ int exit_page_cache(void)
 
 void write_pio(page* p)
 {
-    void* page_data_addr = ((const char*)PHYS_BASE) + ((p - mem_map) * PAGE_SIZE);
+    void* page_data_addr = ((char*)PHYS_BASE) + ((p - mem_map) * PAGE_SIZE);
     operate operation = WRITE;
     struct pio* head = create_pio(p->path_name, 0, p->index, operation, page_data_addr, 1); // submit pio to write the page into ssd, but page index is not set yet
     submit_pio(head);
@@ -70,7 +70,7 @@ void write_pio(page* p)
 
 void read_pio(page* p)
 {
-    void* page_data_addr = ((const char*)PHYS_BASE) + ((p - mem_map) * PAGE_SIZE);
+    void* page_data_addr = ((char*)PHYS_BASE) + ((p - mem_map) * PAGE_SIZE);
     operate operation = READ;
     struct pio* head = create_pio(p->path_name, 0, p->index, operation, page_data_addr, 1); // submit pio to write the page into ssd, but page index is not set yet
     submit_pio(head);
@@ -152,7 +152,7 @@ int page_cache_write(char* path_name, char* data)
     {
         unsigned int copy_len;
         page* new_page = alloc_page();
-        void* page_data_addr = ((const char*)PHYS_BASE) + ((new_page - mem_map) * PAGE_SIZE);
+        void* page_data_addr = ((char*)PHYS_BASE) + ((new_page - mem_map) * PAGE_SIZE);
 
         if (unlikely(!new_page)) {return -1;} // failed to get a new page, return
 
