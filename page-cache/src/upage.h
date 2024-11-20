@@ -1,15 +1,15 @@
 #ifndef USER_PAGE_CACHE
 #define USER_PAGE_CACHE
 #define CACHE_SIZE 1000
-#define PAGE_HEADER_SIZE sizeof(Header)
+#define PAGE_HEADER_SIZE sizeof(header)
 
 #include <cache_api.h>
 #include <spdk.h>
 
-typedef struct
+typedef struct Header
 {
     unsigned int PAGES;         // Length of the data in the package
-} Header;
+} header;
 
 typedef struct PAGE
 {

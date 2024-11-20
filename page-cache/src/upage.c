@@ -18,7 +18,7 @@
 
 struct lru_cache lru_cache = {NULL, NULL, 0};
 page* mem_map;
-void* phys_base;
+void* PHYS_BASE;
 struct page_free_list free_list = {NULL, 0};
 
 int init_page_cache(void)
@@ -30,10 +30,10 @@ int init_page_cache(void)
 	return 1;
     }
 
-    mem_map = (page*)spdk_zmalloc(CACHE_SIZE * sizeof(page), 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE); // allocate space for struct PAGE
-    phys_base =  spdk_zmalloc(CACHE_SIZE * PAGE_SIZE, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+    mem_map = (page*)spdk_zmalloc(CACHE_SIZE * sizeof(page), 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE); // allocate space for struct PAGconst E
+    PHYS_BASE =  spdk_zmalloc(CACHE_SIZE * PAGE_SIZE, 0x1000, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 
-    /* put all free pages int free list*/
+    /* put all free pages int free list */
     for (int i = 0;i < CACHE_SIZE;i++)
     {
         mem_map[i].next = free_list.head;
@@ -51,25 +51,25 @@ int init_page_cache(void)
 int exit_page_cache(void)
 {
     spdk_free(mem_map);
-    spdk_free(phys_base);
+    spdk_free(PHYS_BASE);
     exit_ssd_cache();
     return 0;
 }
 
 void write_pio(page* p)
 {
-    void* page_data_addr = ((char*)phys_base) + ((p - mem_map) * PAGE_SIZE);
+    void* page_data_addr = ((const char*)PHYS_BASE) + ((p - mem_map) * PAGE_SIZE);
     operate operation = WRITE;
-    struct pio* head = create_pio(p->path_name, 0, p->index, operation, page_data_addr, 1);//submit pio to write the page into ssd, but page index is not set yet
+    struct pio* head = create_pio(p->path_name, 0, p->index, operation, page_data_addr, 1); // submit pio to write the page into ssd, but page index is not set yet
     submit_pio(head);
     free_pio(head);
 }
 
 void read_pio(page* p)
 {
-    void* page_data_addr = ((char*)phys_base) + ((p - mem_map) * PAGE_SIZE);
+    void* page_data_addr = ((const char*)PHYS_BASE) + ((p - mem_map) * PAGE_SIZE);
     operate operation = READ;
-    struct pio* head = create_pio(p->path_name, 0, p->index, operation, page_data_addr, 1);//submit pio to write the page into ssd, but page index is not set yet
+    struct pio* head = create_pio(p->path_name, 0, p->index, operation, page_data_addr, 1); // submit pio to write the page into ssd, but page index is not set yet
     submit_pio(head);
     free_pio(head);
 }
@@ -83,8 +83,8 @@ page* alloc_page(void)
         evict->prev->next = NULL;
         lru_cache.tail = evict->prev;
 
-        write_pio(evict);// write the page into ssd
-        free_page(evict);// free the page
+        write_pio(evict); // write the page into ssd
+        free_page(evict); // free the page
 
         lru_cache.nr_pages--;
 
@@ -99,7 +99,7 @@ page* alloc_page(void)
     }
     free_list.nr_free--;
 
-    if(!new_page)
+    if(unlikely(!new_page))
     {
         printf("Error: allocate a page failed\n");
     }
@@ -127,45 +127,62 @@ void free_page(page* p)
     free_list.nr_free++;
 }
 
-void move_to_lru_head(page* p)
+void add_to_lru_head(page* p)
 {
     p->flag |= PG_lru;
 
     p->next = lru_cache.head;
-    if (lru_cache.head) lru_cache.head->prev = p;
+    if (lru_cache.head) {lru_cache.head->prev = p;}
     lru_cache.head = p;
-    if (lru_cache.tail == NULL) lru_cache.tail = p;
+    if (lru_cache.tail == NULL) {lru_cache.tail = p;}
 }
 
 int page_cache_write(char* path_name, char* data)
 {
-    unsigned int copy_len = 0;
-    unsigned int data_len = strlen(data);
+    const unsigned int DATA_LEN = strlen(data);
+    const unsigned int DATA_PAGES = (strlen(data) + PAGE_HEADER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE ; // ceiling division to calculate the pages
     unsigned int data_offset = 0;
     unsigned int index = 0;
     bool isLastPage = false;
     bool isFirstPage = true;
-    while (isLastPage == true) //The data has not yet been written
+    while (isLastPage == false) // The data has not yet been written
     {
+        unsigned int copy_len;
         page* new_page = alloc_page();
-        if (!new_page) return -1; //failed to get a new page, return
+        void* page_data_addr = ((const char*)PHYS_BASE) + ((new_page - mem_map) * PAGE_SIZE);
+
+        if (unlikely(!new_page)) {return -1;} // failed to get a new page, return
 
         /* setting infomation of new page */
         new_page->flag |= PG_dirty;
         new_page->index = index;
         new_page->path_name = path_name;
 
+        /* Write the data into new page */
         if (unlikely(isFirstPage == true))
         {
             isFirstPage = false;
+            header hd;
+            hd.PAGES = DATA_PAGES;
+
+            // If the first page is also last page
+            if (unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE)) {isLastPage = true;}
+
+            copy_len = (isLastPage) ? DATA_LEN : PAGE_SIZE - PAGE_HEADER_SIZE;
+
+            // Copy the header into the package
+            memcpy(page_data_addr, &hd, PAGE_HEADER_SIZE);
+
+            // Copy the data chunk into the package
+            memcpy(page_data_addr + PAGE_HEADER_SIZE, data, copy_len);
+            data_offset += (copy_len + PAGE_HEADER_SIZE);
+            continue;
         }
 
-        /* write the data into new page */
-
         // the number of bytes to be written this time
-        if((unlikely(data_len - data_offset <= PAGE_SIZE)))
+        if((unlikely(DATA_LEN - data_offset <= PAGE_SIZE)))
         {
-            copy_len = (data_len - data_offset);
+            copy_len = (DATA_LEN - data_offset);
             isLastPage = true;
         }
         else
@@ -174,13 +191,11 @@ int page_cache_write(char* path_name, char* data)
             isLastPage = false;
         }
 
-        void* page_data_addr = ((char*)phys_base) + ((new_page - mem_map) * PAGE_SIZE);
         memcpy(page_data_addr, data + data_offset, copy_len);
 
-        move_to_lru_head(new_page);
+        add_to_lru_head(new_page);
         data_offset += copy_len;
         index++;
-
     }
 
     return 0;
