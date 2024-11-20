@@ -1,12 +1,18 @@
 #ifndef USER_PAGE_CACHE
 #define USER_PAGE_CACHE
 #define CACHE_SIZE 1000
-#define PAGE_HEADER_SIZE 10
+#define PAGE_HEADER_SIZE sizeof(Header)
 
 #include <cache_api.h>
 #include <spdk.h>
 
-typedef struct PAGE {
+typedef struct
+{
+    const unsigned int PAGES;         // Length of the data in the package
+} Header;
+
+typedef struct PAGE
+{
     unsigned flag;
     char* path_name;
     unsigned int index;
@@ -14,19 +20,22 @@ typedef struct PAGE {
     struct PAGE* next;
 }page;
 
-enum pageflags {
+enum pageflags
+{
     PG_locked = 0x01,
     PG_dirty = 0x02,
     PG_lru = 0x04,
 };
 
-struct lru_cache {
+struct lru_cache
+{
     page* head;
     page* tail;
     int nr_pages;
 };
 
-struct page_free_list {
+struct page_free_list
+{
     page* head;
     int nr_free;
 };
