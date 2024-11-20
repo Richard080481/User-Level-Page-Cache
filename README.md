@@ -1,5 +1,19 @@
 # Development Log
 
+## Date: 2024-11-20 Richard & Bonnie
+
+### Today's Progress
+- Implement page_cache_write with header function.
+- Create umalloc.h for spdk_zmalloc()
+- Set up header struct.
+
+### Plans for Tomorrow
+- Design link_page_cache function.
+
+### Plans for Tomorrow
+- Add total file length in first page.
+- Make sure there is only one page cache in the operating system.
+
 ## Date: 2024-11-14 Richard & Bonnie
 
 ### Today's Progress
