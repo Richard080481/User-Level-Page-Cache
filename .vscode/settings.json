@@ -2,7 +2,11 @@
     "files.associations": {
         "spdk.h": "c",
         "shm.h": "c",
-        "upage.h": "c"
+        "upage.h": "c",
+        "upio.h": "c",
+        "cache_api.h": "c",
+        "string.h": "c",
+        "error.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

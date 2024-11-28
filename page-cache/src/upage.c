@@ -5,8 +5,6 @@
 #include <string.h>
 #include <error.h>
 
-#define PAGE_HEADER_SIZE sizeof(header)
-#define CACHE_SIZE 1000
 
 #define ENABLE_BRANCH_HINTS
 #ifdef ENABLE_BRANCH_HINTS
@@ -19,38 +17,16 @@
     #define unlikely(x) (x)
 #endif
 
-typedef struct hash_entry
-{
-    char* path_name;
-    page* page_ptr;
-    struct hash_entry* next;
-} hash_entry;
-
 typedef struct page_free_list
 {
     page* head;
     int nr_free;
 } page_free_list;
 
-enum pageflags
-{
-    PG_locked = 0x01,
-    PG_dirty = 0x02,
-    PG_lru = 0x04,
-};
-
-typedef struct Header
-{
-    unsigned int PAGES;         // How many pages in the file header.
-} header;
-
-typedef struct lru_entry lru_entry;
-
 page* mem_map;
 void* PHYS_BASE;
-lru_cache lru_list = {NULL, NULL, 0}; // warning!!!
+lru_cache lru_list = {NULL, NULL, 0};
 struct page_free_list free_list = {NULL, 0};
-hash_entry* hash_table[CACHE_SIZE] = {NULL};
 
 int init_page_cache(void)
 {
@@ -140,7 +116,7 @@ void free_page(page* p)
     free_list.nr_free++;
 }
 
-int page_cache_write(char* path_name, char* data)
+int uwrite(char* path_name, char* data)
 {
     const unsigned int DATA_LEN = strlen(data);
     const unsigned int DATA_PAGES = (strlen(data) + PAGE_HEADER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE ; // ceiling division to calculate the pages
@@ -196,7 +172,7 @@ int page_cache_write(char* path_name, char* data)
 
         memcpy(page_data_addr, data + data_offset, copy_len);
 
-        add_to_lru_head(new_page);
+        add_to_lru_head(&lru_list, new_page);
         data_offset += copy_len;
         index++;
     }
@@ -204,6 +180,7 @@ int page_cache_write(char* path_name, char* data)
     return 0;
 }
 
+// for uread
 void write_to_buffer(page* page, void* buffer)
 {
     unsigned int page_cnt = 0; // the number of pages in this file
@@ -225,7 +202,7 @@ void write_to_buffer(page* page, void* buffer)
     }
 }
 
-int page_cache_read(char* path_name, unsigned int page_index, void* buffer)
+int uread(char* path_name, unsigned int page_index, void* buffer)
 {
     page* target_page = hash_table_lookup(path_name);
 
@@ -259,80 +236,12 @@ int page_cache_read(char* path_name, unsigned int page_index, void* buffer)
     return 0;
 }
 
-unsigned int hash_function(char* path_name)
-{
-    unsigned int hash = 0;
-    while (*path_name)
-    {
-        hash = (hash * 31) + *path_name++;
-    }
-    return hash % CACHE_SIZE;
-}
-
-page* hash_table_lookup(char* path_name)
-{
-    unsigned int hash_index = hash_function(path_name);
-    hash_entry* entry = hash_table[hash_index];
-
-    /*Check if the entry belongs to this page; if not, move on to the next entry*/
-    while (entry)
-    {
-        if (strcmp(entry->path_name, path_name) == 0) // check if the entry belongs to this page
-        {
-            return entry->page_ptr;
-        }
-        entry = entry->next; // move on to the next entry
-    }
-
-    return NULL;
-}
-
-void hash_table_insert(char* path_name, page* page_ptr)
-{
-    unsigned int hash_index = hash_function(path_name);
-    hash_entry* new_entry = (hash_entry*)malloc(sizeof(hash_entry));
-
-    /*Set the information in the hash entry*/
-    new_entry->path_name = strdup(path_name);
-    new_entry->page_ptr = page_ptr;
-    new_entry->next = hash_table[hash_index];
-    hash_table[hash_index] = new_entry;
-}
-
-void hash_table_remove(char* path_name)
-{
-    unsigned int hash_index = hash_function(path_name);
-    hash_entry* entry = hash_table[hash_index];
-    hash_entry* prev = NULL;
-
-    /* Check if the entry belongs to this page; if not, move on to the next entry */
-    while (entry)
-    {
-        if (strcmp(entry->path_name, path_name) == 0) // the entry belongs to this page
-        {
-            if (prev != NULL) // if previous page is not NULL
-            {
-                prev->next = entry->next;
-            }
-            else // if previous page is NULL
-            {
-                hash_table[hash_index] = entry->next;
-            }
-            free(entry);
-            return;
-        }
-        /* move on to the next entry */
-        prev = entry;
-        entry = entry->next;
-    }
-}
-
 int main(int argc, char* argv[])
 {
     init_page_cache();
     void* temp_write = malloc(PAGE_SIZE);
     sprintf(temp_write, "%d", rand() % 1000000);
-    page_cache_write("test_file", temp_write);
+    uwrite("test_file", temp_write);
     exit_page_cache();
     return 0;
 }

@@ -1,22 +1,34 @@
 #ifndef USER_PAGE_CACHE
 #define USER_PAGE_CACHE
 
-
-
 #include <cache_api.h>
 #include <spdk.h>
 #include "lru.h"
 #include "upio.h"
 
+#define PAGE_HEADER_SIZE sizeof(header)
+#define CACHE_SIZE 1000
+
+typedef struct Header
+{
+    unsigned int PAGES;         // How many pages in the file header.
+} header;
+
 typedef struct PAGE
 {
     unsigned flag;
     char* path_name;
-    unsigned int index;
-    struct PAGE* prev;
+    unsigned int index; // 0 index
+    // struct PAGE* prev;
     struct PAGE* next;
-    lru_entry* lru_ptr;
 }page;
+
+enum pageflags
+{
+    PG_locked = 0x01,
+    PG_dirty = 0x02,
+    PG_lru = 0x04,
+};
 
 /**
  * @brief Init share memory, wakeup workers
