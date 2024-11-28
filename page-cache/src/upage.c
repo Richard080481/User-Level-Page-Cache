@@ -210,7 +210,7 @@ int uread(char* path_name, unsigned int page_index, void* buffer)
         target_page->index = page_index;
         target_page->flag |= PG_lru;
 
-        read_pio(target_page);
+        read_pio(target_page, PHYS_BASE, mem_map);
         move_to_lru_head(&lru_list, target_page);
         hash_table_insert(path_name, target_page);
 
