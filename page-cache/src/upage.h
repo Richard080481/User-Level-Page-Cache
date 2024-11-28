@@ -70,14 +70,8 @@ void free_page(page* p);
 int page_cache_write(char* path_name, char* data);
 
 /**
- * @brief send pio(write) to dm-cache
+ * @brief Write to user's buffer
  * @return No return value
  */
-void write_pio(page* p);
-
-/**
- * @brief send pio(read) to dm-cache
- * @return No return value
- */
-void read_pio(page* p);
+void write_to_buffer(page* page, void* buffer);
 #endif
