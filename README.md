@@ -1,5 +1,17 @@
 # Development Log
 
+## Date: 2024-11-28 Richard & Bonnie
+
+### Today's Progress
+- Fixed alloc_page and free_page
+- Fixed parameter passing
+- implement lru and hash table
+
+### Plans for Tomorrow
+- Fix compiler error
+- Design link_page_cache and unlink_page_cache function.
+- Think about multiple process and share memory problem.
+
 ## Date: 2024-11-20 Richard & Bonnie
 
 ### Today's Progress
