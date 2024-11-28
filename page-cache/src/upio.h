@@ -1,6 +1,10 @@
 #ifndef UPIO_H
 #define UPIO_H
 
+#include "upage.h"
+#include "umalloc.h"
+#include "lru.h"
+
 /**
  * @brief send pio(write) to dm-cache
  * @return No return value
