@@ -5,9 +5,18 @@
 
 #include <cache_api.h>
 #include <spdk.h>
-#include "types.h"
 #include "lru.h"
 #include "upio.h"
+
+typedef struct PAGE
+{
+    unsigned flag;
+    char* path_name;
+    unsigned int index;
+    struct PAGE* prev;
+    struct PAGE* next;
+    lru_entry* lru_ptr;
+}page;
 
 /**
  * @brief Init share memory, wakeup workers

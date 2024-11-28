@@ -1,7 +1,21 @@
 #ifndef LRU_H
 #define LRU_H
 
-#include "types.h"
+#include "upage.h"
+
+typedef struct lru_entry
+{
+    page* page_ptr;
+    struct lru_entry* prev;
+    struct lru_entry* next;
+} lru_entry;
+
+typedef struct lru_cache
+{
+    lru_entry* head;
+    lru_entry* tail;
+    int nr_pages;
+} lru_cache;
 
 /**
  * @brief Move a page to the head of the LRU list

@@ -19,6 +19,32 @@
     #define unlikely(x) (x)
 #endif
 
+typedef struct hash_entry
+{
+    char* path_name;
+    page* page_ptr;
+    struct hash_entry* next;
+} hash_entry;
+
+typedef struct page_free_list
+{
+    page* head;
+    int nr_free;
+} page_free_list;
+
+enum pageflags
+{
+    PG_locked = 0x01,
+    PG_dirty = 0x02,
+    PG_lru = 0x04,
+};
+
+typedef struct Header
+{
+    unsigned int PAGES;         // How many pages in the file header.
+} header;
+
+typedef struct lru_entry lru_entry;
 
 page* mem_map;
 void* PHYS_BASE;
