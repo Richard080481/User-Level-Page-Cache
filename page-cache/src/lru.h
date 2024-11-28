@@ -14,7 +14,7 @@ typedef struct lru_entry
 
 typedef struct hash_entry
 {
-    lru_entry* page_ptr;
+    lru_entry* lru_entry_ptr;
     struct hash_entry* next;
 } hash_entry;
 
@@ -28,7 +28,7 @@ typedef struct lru_cache
  * @brief Move a page to the head of the LRU list
  * @return No return value
  */
-void add_to_lru_head(lru_cache* lru_list, lru_entry* page);
+void add_to_lru_head(lru_cache* lru_list, page* pg)
 
 /**
  * @brief Move a page which has already in the lru list to the head of the LRU list

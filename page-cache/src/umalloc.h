@@ -1,3 +1,6 @@
+#ifndef UMALLOC_H
+#define UMALLOC_H
+
 #include <spdk.h>
 
 /**
@@ -19,3 +22,5 @@ void* umalloc_dma(unsigned len);
  * @return No return value
  */
 void ufree(void* free_addr);
+
+#endif
