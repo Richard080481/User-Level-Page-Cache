@@ -53,12 +53,8 @@ page* alloc_page(void)
     {
         /* write back to the dm-cache (the tail of the LRU list). */
         write_pio(lru_list.tail->page_ptr, PHYS_BASE, mem_map); // write the page into ssd
-        free_page(lru_list.tail->page_ptr); // free all page of the file
+        remove_from_lru(&lru_list, lru_list.tail); // remove lru entry (remove all pages of the file)
 
-        /* free lru entry */
-        void* lru_tail = lru_list.tail;
-        lru_list.tail = lru_list.tail->prev;
-        ufree(lru_tail); // free lru entry
     }
 
     /* allocate a new page from the head of free list */
