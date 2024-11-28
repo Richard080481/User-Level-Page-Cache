@@ -44,7 +44,12 @@ int remove_from_lru(lru_cache* lru_list, lru_entry* hd)
     if(hd->next) hd->next->prev = hd->prev;
     else {lru_list->tail = hd->prev;} // this page is tail, so the previous page becomes the new tail
 
-    // add to the free list (not finished)
+    free_page(hd->page_ptr);
+
+    hd->page_ptr = NULL;
+    hd->next = NULL;
+    hd->prev = NULL;
+    ufree(hd);
 
     return 0;
 }
