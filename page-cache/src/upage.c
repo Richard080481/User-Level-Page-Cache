@@ -44,12 +44,7 @@ int init_page_cache(void)
     for (int i = 0;i < CACHE_SIZE;i++)
     {
         mem_map[i].next = free_list.head;
-        if (free_list.head)
-        {
-            free_list.head->prev = &mem_map[i];
-        }
         free_list.head = &mem_map[i];
-
         free_list.nr_free++;
     }
     return 0;
@@ -66,26 +61,21 @@ int exit_page_cache(void)
 page* alloc_page(void)
 {
 
-    if (free_list.nr_free == 0) //the number of free page is zero, do write-back
+    if (free_list.nr_free == 0) // the number of free page is zero, do write-back
     {
-        page* evict = lru_list.tail;
-        evict->prev->next = NULL;
-        lru_list.tail = evict->prev;
+        /* write back to the dm-cache (the tail of the LRU list). */
+        write_pio(lru_list.tail->page_ptr, PHYS_BASE, mem_map); // write the page into ssd
+        free_page(lru_list.tail->page_ptr); // free all page of the file
 
-        write_pio(evict); // write the page into ssd
-        free_page(evict); // free the page
-
-        lru_list.nr_pages--;
-
+        /* free lru entry */
+        void* lru_tail = lru_list.tail;
+        lru_list.tail = lru_list.tail->prev;
+        ufree(lru_tail); // free lru entry
     }
 
     /* allocate a new page from the head of free list */
     page* new_page = free_list.head;
-    free_list.head = new_page->next;
-    if (free_list.head)
-    {
-        free_list.head->prev = NULL;
-    }
+    free_list.head = free_list.head->next;
     free_list.nr_free--;
 
     if(unlikely(!new_page))
@@ -96,24 +86,31 @@ page* alloc_page(void)
     return new_page;
 }
 
-void free_page(page* p)
+void free_page(page* target_page)
 {
-    /* move page to the head of free list */
-    p->next = free_list.head;
-    if (free_list.head)
+    /* get the number of pages for the given path */
+    page* tmp_page = target_page; // the address of the page that will be freed
+    void* page_data_addr = ((char*)PHYS_BASE) + ((target_page - mem_map) * PAGE_SIZE);
+    unsigned int page_cnt = 0;
+    memcpy(&page_cnt, page_data_addr, PAGE_HEADER_SIZE);
+
+    /* free all pages of the file */
+    for (int i = 0;i < page_cnt;i++)
     {
-        free_list.head->prev = p;
+        /* move page to the head of free list */
+        tmp_page = target_page;
+        tmp_page->next = free_list.head;
+        free_list.head = tmp_page;
+
+        /* clear all data in the page */
+        tmp_page->path_name = NULL;
+        tmp_page->index = 0;
+        tmp_page->flag = 0;
+
+        /* move to next page */
+        target_page = target_page->next;
+        free_list.nr_free++;
     }
-    free_list.head = p;
-
-    /* clear all data in the page */
-    p->prev = NULL;
-    p->next = NULL;
-    p->path_name = NULL;
-    p->index = 0;
-    p->flag = 0;
-
-    free_list.nr_free++;
 }
 
 int uwrite(char* path_name, char* data)

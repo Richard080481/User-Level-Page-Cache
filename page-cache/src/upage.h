@@ -81,7 +81,7 @@ page* alloc_page(void);
  * @brief Free the page, put it back to free page list
  * @return No return value
  */
-void free_page(page* p);
+void free_page(page* page);
 
 /**
  * @brief Write to page cache
