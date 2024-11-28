@@ -9,6 +9,17 @@
 #define PAGE_HEADER_SIZE sizeof(header)
 #define CACHE_SIZE 1000
 
+#define ENABLE_BRANCH_HINTS
+#ifdef ENABLE_BRANCH_HINTS
+    // Define likely and unlikely macros
+    #define likely(x)   __builtin_expect(!!(x), 1)
+    #define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+    // When branch hints are disabled, likely/unlikely do nothing
+    #define likely(x)   (x)
+    #define unlikely(x) (x)
+#endif
+
 typedef struct Header
 {
     unsigned int PAGES;         // How many pages in the file header.

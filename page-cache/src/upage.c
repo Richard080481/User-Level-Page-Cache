@@ -5,18 +5,6 @@
 #include <string.h>
 #include <error.h>
 
-
-#define ENABLE_BRANCH_HINTS
-#ifdef ENABLE_BRANCH_HINTS
-    // Define likely and unlikely macros
-    #define likely(x)   __builtin_expect(!!(x), 1)
-    #define unlikely(x) __builtin_expect(!!(x), 0)
-#else
-    // When branch hints are disabled, likely/unlikely do nothing
-    #define likely(x)   (x)
-    #define unlikely(x) (x)
-#endif
-
 typedef struct page_free_list
 {
     page* head;
