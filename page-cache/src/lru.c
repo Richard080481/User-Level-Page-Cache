@@ -2,8 +2,11 @@
 #include "upage.h"
 
 
-void add_to_lru_head(lru_cache* lru_list, lru_entry* hd)
+void add_to_lru_head(lru_cache* lru_list, page* pg)
 {
+    lru_entry* hd = (lru_entry*)umalloc_share(sizeof(lru_entry));
+    hd->page_ptr = pg;
+
     /* set the data of new page */
     hd->page_ptr->flag |= PG_lru;
 
@@ -11,68 +14,61 @@ void add_to_lru_head(lru_cache* lru_list, lru_entry* hd)
     if (lru_list->head) {lru_list->head->prev = hd;}
     lru_list->head = hd;
     if (lru_list->tail == NULL) {lru_list->tail = hd;} // lru list is empty, so the tail is new lru entry
-
-    lru_list->nr_pages++;
+    hash_table_insert(hd);
 }
 
 void move_to_lru_head(lru_cache* lru_list, lru_entry* hd)
 {
-    lru_entry* target_lru_entry = hd->lru_ptr;
-
-    if(target_lru_entry->prev) target_lru_entry->prev->next = target_lru_entry->next; // modify previous lru entry's next
+    if(hd->prev) {hd->prev->next = hd->next;} // modify previous lru entry's next
     else {return;} // this lru entry is already the head, return
+    if(hd->next) {hd->next->prev = hd->prev;}
+    else {lru_list->tail = hd->prev;} // this page is tail, so the previous page becomes the new tail
 
-    if(target_lru_entry->next) target_lru_entry->next->prev = target_lru_entry->prev;
-    else {lru_list->tail = target_lru_entry;} // this page is tail, so the previous page becomes the new tail
-
-    target_lru_entry->prev = NULL;
-    target_lru_entry->next = lru_list->head;
-
-    if (lru_list->head) {lru_list->head->prev = p;} // modify head's previous page
-
-    lru_list->head = target_lru_entry; // head of lru list change to this page
-
+    hd->prev = NULL;
+    hd->next = lru_list->head;
+    lru_list->head = hd; // head of lru list change to this page
 }
 
-void remove_from_lru(lru_cache* lru_list, page* p)
+int remove_from_lru(lru_cache* lru_list, lru_entry* hd)
 {
-    lru_entry* target_lru_entry = p->lru_ptr;
+    if(unlikely(hash_table_remove(hd) == 1))
+    {
+        perror("ERROR: remove_from_lru not found in hash table");
+        return 1;
+    }
 
     /* Remove the page from the list */
-    if (target_lru_entry->prev) {target_lru_entry->prev->next = target_lru_entry->next;} // modify head's previous page
-    else {lru_list->head = target_lru_entry->next;} // this page is the head, so the next page becomes the new head
+    if (hd->prev) {hd->prev->next = hd->next;} // modify head's previous page
+    else {lru_list->head = hd->next;} // this page is the head, so the next page becomes the new head
+    if(hd->next) hd->next->prev = hd->prev;
+    else {lru_list->tail = hd->prev;} // this page is tail, so the previous page becomes the new tail
 
-    if(target_lru_entry->next) target_lru_entry->next->prev = target_lru_entry->prev;
-    else {lru_list->tail = p->prev;} // this page is tail, so the previous page becomes the new tail
+    // add to the free list (not finished)
 
-    /* clear the LRU flag */
-    p->flag &= ~PG_lru;
-    p->lru_ptr = NULL;
-
+    return 0;
 }
-
 
 unsigned int hash_function(char* path_name)
 {
     unsigned int hash = 0;
-    while (*path_name)
+    while (unlikely(*path_name))
     {
         hash = (hash * 31) + *path_name++;
     }
     return hash % CACHE_SIZE;
 }
 
-page* hash_table_lookup(char* path_name)
+hash_entry* hash_table_lookup(char* path_name)
 {
-    unsigned int hash_index = hash_function(path_name);
+    const unsigned int hash_index = hash_function(path_name);
     hash_entry* entry = hash_table[hash_index];
 
     /*Check if the entry belongs to this page; if not, move on to the next entry*/
     while (entry)
     {
-        if (strcmp(entry->path_name, path_name) == 0) // check if the entry belongs to this page
+        if (strcmp(entry->lru_entry_ptr->page_ptr->path_name, path_name) == 0) // check if the entry belongs to this page
         {
-            return entry->page_ptr;
+            return entry;
         }
         entry = entry->next; // move on to the next entry
     }
@@ -80,42 +76,35 @@ page* hash_table_lookup(char* path_name)
     return NULL;
 }
 
-void hash_table_insert(char* path_name, page* page_ptr)
+void hash_table_insert(lru_entry* hd)
 {
-    unsigned int hash_index = hash_function(path_name);
-    hash_entry* new_entry = (hash_entry*)malloc(sizeof(hash_entry));
+    char* path_name = hd->page_ptr->path_name;
+    const unsigned int hash_index = hash_function(path_name);
+    hash_entry* new_entry = (hash_entry*)umalloc_share(sizeof(hash_entry));
 
     /*Set the information in the hash entry*/
-    new_entry->path_name = strdup(path_name);
-    new_entry->page_ptr = page_ptr;
-    new_entry->next = hash_table[hash_index];
-    hash_table[hash_index] = new_entry;
+    new_entry->lru_entry_ptr = hd;
+    if (hash_table[hash_index] == NULL) {hash_table[hash_index] = new_entry;}
+    else {hash_table[hash_index]->next = new_entry;}
 }
 
-void hash_table_remove(char* path_name)
+int hash_table_remove(lru_entry* hd)
 {
-    unsigned int hash_index = hash_function(path_name);
-    hash_entry* entry = hash_table[hash_index];
-    hash_entry* prev = NULL;
-
-    /* Check if the entry belongs to this page; if not, move on to the next entry */
-    while (entry)
+    char* path_name = hd->page_ptr->path_name;
+    hash_entry* lookup_entry = hash_table_lookup(path_name);
+    if (unlikely(lookup_entry == NULL))
     {
-        if (strcmp(entry->path_name, path_name) == 0) // the entry belongs to this page
-        {
-            if (prev != NULL) // if previous page is not NULL
-            {
-                prev->next = entry->next;
-            }
-            else // if previous page is NULL
-            {
-                hash_table[hash_index] = entry->next;
-            }
-            free(entry);
-            return;
-        }
-        /* move on to the next entry */
-        prev = entry;
-        entry = entry->next;
+        return 1; // not found;
     }
+    else
+    {
+        if(lookup_entry->next == NULL) {ufree(lookup_entry);}
+        else
+        {
+            hash_entry* remove_hash_entry = lookup_entry;
+            lookup_entry = lookup_entry->next;
+            ufree(remove_hash_entry);
+        }
+    }
+    return 0;
 }
