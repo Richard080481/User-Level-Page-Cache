@@ -1,6 +1,6 @@
 #include "lru.h"
-#include "types.h"
 #include "upage.h"
+
 
 void add_to_lru_head(lru_cache* lru_list, page* p)
 {
