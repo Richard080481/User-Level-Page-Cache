@@ -1,6 +1,7 @@
 #ifndef LRU_H
 #define LRU_H
 
+#include "umalloc.h"
 #include "upage.h"
 
 hash_entry* hash_table[CACHE_SIZE] = {NULL};

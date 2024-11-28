@@ -5,6 +5,7 @@
 #include <spdk.h>
 #include "lru.h"
 #include "upio.h"
+#include "umalloc.h"
 
 #define PAGE_HEADER_SIZE sizeof(header)
 #define CACHE_SIZE 1000
