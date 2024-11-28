@@ -12,6 +12,7 @@ void add_to_lru_head(lru_cache* lru_list, page* pg)
 
     /* modify the data of LRU list*/
     if (lru_list->head) {lru_list->head->prev = hd;}
+    hd->next = lru_list->head;
     lru_list->head = hd;
     if (lru_list->tail == NULL) {lru_list->tail = hd;} // lru list is empty, so the tail is new lru entry
     hash_table_insert(hd);
