@@ -24,6 +24,7 @@ page* mem_map;
 void* PHYS_BASE;
 lru_cache lru_list = {NULL, NULL, 0}; // warning!!!
 struct page_free_list free_list = {NULL, 0};
+hash_entry* hash_table[CACHE_SIZE] = {NULL};
 
 int init_page_cache(void)
 {
@@ -177,111 +178,128 @@ int page_cache_write(char* path_name, char* data)
     return 0;
 }
 
-// int page_cache_read(char* path_name, unsigned int page_index, void* buffer)
-// {
-//     const unsigned int DATA_PAGES = 0;
+void write_to_buffer(page* page, void* buffer)
+{
+    unsigned int page_cnt = 0; // the number of pages in this file
+    unsigned int data_offset = 0; // the number of bytes written to the buffer
+    void* page_data_addr = ((char*)PHYS_BASE) + ((page - mem_map) * PAGE_SIZE);
 
-//     page* target_page = hash_table_lookup(path_name, page_index);
+    /* get the number of pages in this file */
+    memcpy(page_cnt, page_data_addr, PAGE_HEADER_SIZE);
 
-//     if (target_page)// if the page in the hash table
-//     {
-//         move_to_lru_head(target_page);
+    /* write the data in the file to user's buffer */
+    memcpy(buffer, page_data_addr + PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE); // write first page
+    data_offset = PAGE_SIZE - PAGE_HEADER_SIZE;
+    for (int i = 1;i < page_cnt;i++)
+    {
+        page = page->next; // move to next page
+        page_data_addr = ((char*)PHYS_BASE) + ((page - mem_map) * PAGE_SIZE);
+        memcpy(buffer + data_offset, page_data_addr, PAGE_SIZE);
+        data_offset+=PAGE_SIZE; // modify data offset
+    }
+}
 
-//         /*write the data into user's buffer*/
-//         void* page_data_addr = ((char*)phys_base) + ((target_page - mem_map) * PAGE_SIZE);
-//         memcpy(buffer, page_data_addr, PAGE_SIZE);
-//     }
-//     else
-//     {
-//         /*if the page is not in the page cache*/
-//         target_page = alloc_page();
-//         if (unlikely(!target_page)) {return -1;} // failed to get a new page, return
+int page_cache_read(char* path_name, unsigned int page_index, void* buffer)
+{
+    page* target_page = hash_table_lookup(path_name);
 
-//         /*setting infomation of new page */
-//         target_page->path_name = path_name;
-//         target_page->index = page_index;
-//         target_page->flag |= PG_cache;
+    if (target_page != NULL) // if the page is in the hash table (which means it is in the LRU list)
+    {
+        /* move the file to the head of LRU list */
+        move_to_lru_head(&lru_list, target_page);
 
-//         read_pio(target_page);
-//         move_to_lru_head(target_page);
-//         hash_table_insert(path_name, page_index, target_page);
-//         move_to_lru_head(target_page);
+        /* write the data into user's buffer */
+        write_to_buffer(target_page, buffer);
+    }
+    else
+    {
+        /*if the page is not in the page cache*/
+        target_page = alloc_page();
+        if (unlikely(!target_page)) {return -1;} // failed to get a new page, return
 
-//         /*write the data into user's buffer*/
-//         void* page_data_addr = ((char*)phys_base) + ((target_page - mem_map) * PAGE_SIZE);
-//         memcpy(buffer, page_data_addr, PAGE_SIZE);
-//     }
+        /*setting infomation of new page */
+        target_page->path_name = path_name;
+        target_page->index = page_index;
+        target_page->flag |= PG_lru;
 
-//     return 0;
-// }
+        read_pio(target_page);
+        move_to_lru_head(&lru_list, target_page);
+        hash_table_insert(path_name, target_page);
 
-// unsigned int hash_function(char* path_name, unsigned int page_index)
-// {
-//     unsigned int hash = 0;
-//     while (*path_name)
-//     {
-//         hash = (hash * 31) + *path_name++;
-//     }
-//     return (hash + page_index) % HASH_SIZE;
-// }
+        /*write the data into user's buffer*/
+        write_to_buffer(target_page, buffer);
+    }
 
-// page* hash_table_lookup(char* path_name, unsigned int page_index)
-// {
-//     unsigned int hash_index = hash_function(path_name, page_index);
-//     hash_entry* entry = hash_table[hash_index];
+    return 0;
+}
 
-//     /*Check if the entry belongs to this page; if not, move on to the next entry*/
-//     while (entry)
-//     {
-//         if (strcmp(entry->path_name, path_name) == 0 && entry->page_index == page_index)
-//         {
-//             return entry->page_ptr;
-//         }
-//         entry = entry->next;
-//     }
+unsigned int hash_function(char* path_name)
+{
+    unsigned int hash = 0;
+    while (*path_name)
+    {
+        hash = (hash * 31) + *path_name++;
+    }
+    return hash % CACHE_SIZE;
+}
 
-//     return NULL;
-// }
+page* hash_table_lookup(char* path_name)
+{
+    unsigned int hash_index = hash_function(path_name);
+    hash_entry* entry = hash_table[hash_index];
 
-// void hash_table_insert(char* path_name, unsigned int page_index, page* page_ptr)
-// {
-//     unsigned int hash_index = hash_function(path_name, page_index);
-//     hash_entry* new_entry = (hash_entry*)malloc(sizeof(hash_entry));
+    /*Check if the entry belongs to this page; if not, move on to the next entry*/
+    while (entry)
+    {
+        if (strcmp(entry->path_name, path_name) == 0) // check if the entry belongs to this page
+        {
+            return entry->page_ptr;
+        }
+        entry = entry->next; // move on to the next entry
+    }
 
-//     /*Set the information in the hash entry*/
-//     new_entry->path_name = strdup(path_name);
-//     new_entry->page_index = page_index;
-//     new_entry->page_ptr = page_ptr;
-//     new_entry->next = hash_table[hash_index];
-//     hash_table[hash_index] = new_entry;
-// }
+    return NULL;
+}
 
-// void hash_table_remove(char* path_name, unsigned int page_index)
-// {
-//     unsigned int hash_index = hash_function(path_name, page_index);
-//     hash_entry* entry = hash_table[hash_index];
-//     hash_entry* prev = NULL;
+void hash_table_insert(char* path_name, page* page_ptr)
+{
+    unsigned int hash_index = hash_function(path_name);
+    hash_entry* new_entry = (hash_entry*)malloc(sizeof(hash_entry));
 
-//     /*Check if the entry belongs to this page; if not, move on to the next entry*/
-//     while (entry)
-//     {
-//         if (strcmp(entry->path_name, path_name) == 0 && entry->page_index == page_index)//the entry belongs to this page
-//         {
-//             if (prev)
-//             {
-//                 prev->next = entry->next;
-//             }
-//             else
-//             {
-//                 hash_table[hash_index] = entry->next;
-//             }
-//             free(entry);
-//             return;
-//         }
-//         prev = entry;
-//         entry = entry->next;
-//     }
-// }
+    /*Set the information in the hash entry*/
+    new_entry->path_name = strdup(path_name);
+    new_entry->page_ptr = page_ptr;
+    new_entry->next = hash_table[hash_index];
+    hash_table[hash_index] = new_entry;
+}
+
+void hash_table_remove(char* path_name)
+{
+    unsigned int hash_index = hash_function(path_name);
+    hash_entry* entry = hash_table[hash_index];
+    hash_entry* prev = NULL;
+
+    /* Check if the entry belongs to this page; if not, move on to the next entry */
+    while (entry)
+    {
+        if (strcmp(entry->path_name, path_name) == 0) // the entry belongs to this page
+        {
+            if (prev != NULL) // if previous page is not NULL
+            {
+                prev->next = entry->next;
+            }
+            else // if previous page is NULL
+            {
+                hash_table[hash_index] = entry->next;
+            }
+            free(entry);
+            return;
+        }
+        /* move on to the next entry */
+        prev = entry;
+        entry = entry->next;
+    }
+}
 
 int main(int argc, char* argv[])
 {
