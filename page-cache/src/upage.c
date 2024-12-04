@@ -187,20 +187,20 @@ void write_to_buffer(page* page, void* buffer)
 int uread(char* path_name, void* buffer)
 {
     hash_entry* target_entry = hash_table_lookup(path_name);
-    page* target_page = target_entry->lru_entry_ptr->page_ptr;
 
-    if (target_page != NULL) // if the page is in the hash table (which means it is in the LRU list)
+    if (target_entry != NULL) // if the page is in the hash table (which means it is in the LRU list)
     {
         /* move the file to the head of LRU list */
         move_to_lru_head(&lru_list, target_entry->lru_entry_ptr);
 
         /* write the data into user's buffer */
+        page* target_page = target_entry->lru_entry_ptr->page_ptr;
         write_to_buffer(target_page, buffer);
     }
     else
     {
         /*if the page is not in the page cache*/
-        target_page = alloc_page();
+        page* target_page = alloc_page();
         if (unlikely(!target_page)) {return -1;} // failed to get a new page, return
 
         /*setting infomation of new page */

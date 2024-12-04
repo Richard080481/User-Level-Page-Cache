@@ -43,7 +43,7 @@ void read_pio(page* pg, void* PHYS_BASE, page* mem_map)
     /* creat pio head (head is the second page of the path) */
     page_cnt--; // the first page has already been read
 
-    /* set the data of new page  */
+    /* setting infomation of new page */
     page* next_page = alloc_page();
 
     pg->next = next_page; // set first page's next
