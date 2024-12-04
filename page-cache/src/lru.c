@@ -1,6 +1,6 @@
 #include "lru.h"
-#include "upage.h"
 
+hash_entry* hash_table[CACHE_SIZE] = {NULL};
 
 void add_to_lru_head(lru_cache* lru_list, page* pg)
 {
@@ -43,13 +43,6 @@ int remove_from_lru(lru_cache* lru_list, lru_entry* hd)
     else {lru_list->head = hd->next;} // this page is the head, so the next page becomes the new head
     if(hd->next) hd->next->prev = hd->prev;
     else {lru_list->tail = hd->prev;} // this page is tail, so the previous page becomes the new tail
-
-    free_page(hd->page_ptr);
-
-    hd->page_ptr = NULL;
-    hd->next = NULL;
-    hd->prev = NULL;
-    ufree(hd);
 
     return 0;
 }
