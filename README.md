@@ -1,5 +1,15 @@
 # Development Log
 
+## Date: 2024-12-04 Richard & Bonnie
+
+### Today's Progress
+- Add utypes.h
+- Fixed compile error
+
+### Plans for Tomorrow
+- Think about how to implement umalloc
+- Fix segamentation fault
+
 ## Date: 2024-11-28 Richard & Bonnie
 
 ### Today's Progress
