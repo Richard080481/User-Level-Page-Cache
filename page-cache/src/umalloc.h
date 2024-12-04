@@ -46,7 +46,7 @@ void ufree(void* free_addr);
  * @param shm_size The size of the memory region to link to in bytes.
  * @return A pointer to the mapped shared memory if successful, or NULL if the mapping fails.
  */
-void* link_shm(char* shm_name, size_t shm_size);
+// void* link_shm(char* shm_name, size_t shm_size);
 
 /**
  * @brief  Unmap a shared memory region.
@@ -58,7 +58,7 @@ void* link_shm(char* shm_name, size_t shm_size);
  * @param shm_size The size of the memory region to unmap in bytes.
  * @return 0 if successful, or a non-zero value if an error occurs.
  */
-int unmap_shm(void* shm_ptr, size_t shm_size);
+// int unmap_shm(void* shm_ptr, size_t shm_size);
 
 /**
  * @brief  Unlink a shared memory region.
@@ -69,6 +69,6 @@ int unmap_shm(void* shm_ptr, size_t shm_size);
  * @param shm_name The name of the shared memory object to unlink.
  * @return 0 if successful, or a non-zero value if an error occurs.
  */
-int unlink_shm(char* shm_name);
+// int unlink_shm(char* shm_name);
 
 #endif  // UMALLOC_H

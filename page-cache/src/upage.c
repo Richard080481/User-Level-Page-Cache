@@ -26,8 +26,8 @@ int init_page_cache(void)
 	    return 1;
     }
 
-    mem_map = (page*)umalloc_share(CACHE_SIZE * sizeof(page)); // allocate space for struct PAGE
-    PHYS_BASE =  umalloc_share(CACHE_SIZE * PAGE_SIZE);
+    mem_map = (page*)umalloc_share(SHM_NAME, CACHE_SIZE * (size_t)sizeof(page)); // allocate space for struct PAGE
+    PHYS_BASE =  umalloc_share(SHM_NAME, CACHE_SIZE * PAGE_SIZE);
 
     /* put all free pages int free list */
     for (int i = 0;i < CACHE_SIZE;i++)

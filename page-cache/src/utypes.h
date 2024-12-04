@@ -1,6 +1,8 @@
 #ifndef UDATASTRUCTURE_H
 #define UDATASTRUCTURE_H
 
+#define SHM_NAME "/myShm"
+
 #define ENABLE_BRANCH_HINTS
 #ifdef ENABLE_BRANCH_HINTS
     // Define likely and unlikely macros

@@ -4,7 +4,7 @@ hash_entry* hash_table[CACHE_SIZE] = {NULL};
 
 void add_to_lru_head(lru_cache* lru_list, page* pg)
 {
-    lru_entry* hd = (lru_entry*)umalloc_share(sizeof(lru_entry));
+    lru_entry* hd = (lru_entry*)umalloc_share(SHM_NAME, sizeof(lru_entry));
     hd->page_ptr = pg;
 
     /* set the data of new page */
@@ -79,7 +79,7 @@ void hash_table_insert(lru_entry* hd)
 {
     char* path_name = hd->page_ptr->path_name;
     const unsigned int hash_index = hash_function(path_name);
-    hash_entry* new_entry = (hash_entry*)umalloc_share(sizeof(hash_entry));
+    hash_entry* new_entry = (hash_entry*)umalloc_share(SHM_NAME, sizeof(hash_entry));
 
     /*Set the information in the hash entry*/
     new_entry->lru_entry_ptr = hd;
