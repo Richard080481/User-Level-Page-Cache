@@ -29,7 +29,7 @@ typedef enum { PROMOTION, DEMOTION, WRITEBACK } mg_type;
 #define SHM_CACHE_NAME "/udm_cache"
 
 /* may increase hit ratio */
-#define unlikely(x) __builtin_expect(!!(x), 0)
+// #define unlikely(x) __builtin_expect(!!(x), 0)
 
 /* instead of a/b*/
 #define safe_div(a, b) ((b != 0) ? ((double)(a) / (double)(b)) : 0.0)

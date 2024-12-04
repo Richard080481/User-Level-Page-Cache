@@ -138,6 +138,7 @@ int uwrite(char* path_name, char* data)
             memcpy(page_data_addr + PAGE_HEADER_SIZE, data, copy_len);
 
             data_offset += (copy_len + PAGE_HEADER_SIZE);
+
             if(unlikely(DATA_LEN < PAGE_SIZE))
             {
                 isLastPage = true;
@@ -166,6 +167,7 @@ int uwrite(char* path_name, char* data)
         data_offset += copy_len;
         index++;
     }
+
     return 0;
 }
 

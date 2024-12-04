@@ -145,7 +145,7 @@ static int map_pio(struct cache *cache, struct pio *pio) {
 
     unsigned cblock;
     bool hit_or_inserted = false;
-    if (unlikely(optimizable(pio))) {
+    if (optimizable(pio)) {
         hit_or_inserted = lookup_mapping_with_insert(&cache->cache_map, pio->full_path_name,
                                                      pio->page_index, &cblock);
     } else {
