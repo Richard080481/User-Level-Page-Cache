@@ -36,6 +36,7 @@ int init_page_cache(void)
         free_list.head = &mem_map[i];
         free_list.nr_free++;
     }
+    printf("init_page_cache done\n");
     return 0;
 }
 
@@ -67,7 +68,6 @@ page* alloc_page(void)
     {
         printf("Error: allocate a page failed\n");
     }
-
     return new_page;
 }
 
@@ -136,8 +136,16 @@ int uwrite(char* path_name, char* data)
 
             // Copy the data chunk into the package
             memcpy(page_data_addr + PAGE_HEADER_SIZE, data, copy_len);
+
             data_offset += (copy_len + PAGE_HEADER_SIZE);
-            continue;
+            if(unlikely(DATA_LEN < PAGE_SIZE))
+            {
+                isLastPage = true;
+            }
+            else
+            {
+                continue;
+            }
         }
 
         // the number of bytes to be written this time
@@ -158,7 +166,6 @@ int uwrite(char* path_name, char* data)
         data_offset += copy_len;
         index++;
     }
-
     return 0;
 }
 
@@ -223,6 +230,7 @@ int main(int argc, char* argv[])
     init_page_cache();
     char* temp_write = "test";
     void* temp_read = malloc(PAGE_SIZE);
+    printf("I am writing: %s\n", temp_write);
     uwrite("test_file", temp_write);
     uread("test_file", temp_read);
     printf("%p\n", temp_read);

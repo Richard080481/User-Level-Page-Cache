@@ -61,7 +61,6 @@ hash_entry* hash_table_lookup(char* path_name)
 {
     const unsigned int hash_index = hash_function(path_name);
     hash_entry* entry = hash_table[hash_index];
-
     /*Check if the entry belongs to this page; if not, move on to the next entry*/
     while (entry)
     {
@@ -71,7 +70,6 @@ hash_entry* hash_table_lookup(char* path_name)
         }
         entry = entry->next; // move on to the next entry
     }
-
     return NULL;
 }
 
