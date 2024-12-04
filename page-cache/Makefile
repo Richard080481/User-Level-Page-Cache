@@ -24,6 +24,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 cleanall:
 	rm -f ./src/*.o ./src/*.d
+	rm -f ./src/*.o ./src/*.tmp
 	$(MAKE) -C ../dm-cache cleanall
 
 .PHONY: all clean
