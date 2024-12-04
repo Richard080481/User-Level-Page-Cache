@@ -2,28 +2,11 @@
 #define LRU_H
 
 #include "umalloc.h"
-#include "upage.h"
+#include "utypes.h"
 
-hash_entry* hash_table[CACHE_SIZE] = {NULL};
+#define CACHE_SIZE 1000
 
-typedef struct lru_entry
-{
-    page* page_ptr;
-    struct lru_entry* prev;
-    struct lru_entry* next;
-} lru_entry;
-
-typedef struct hash_entry
-{
-    lru_entry* lru_entry_ptr;
-    struct hash_entry* next;
-} hash_entry;
-
-typedef struct lru_cache
-{
-    lru_entry* head;
-    lru_entry* tail;
-} lru_cache;
+extern hash_entry* hash_table[CACHE_SIZE];
 
 /**
  * @brief Move a page to the head of the LRU list
@@ -42,4 +25,29 @@ void move_to_lru_head(lru_cache* lru_list, lru_entry* hd);
  * @return No return value
  */
 int remove_from_lru(lru_cache* lru_list, lru_entry* hd);
+
+/**
+ * @brief Count the hash value of the given path name
+ * @return Hash value of the path name
+ */
+unsigned int hash_function(char* path_name);
+
+/**
+ * @brief Check whether the path name is in the hash table
+ * @return The address of the hash entry for the path name
+ */
+hash_entry* hash_table_lookup(char* path_name);
+
+/**
+ * @brief Insert the LRU entry into the hash table
+ * @return No return value
+ */
+void hash_table_insert(lru_entry* hd);
+
+/**
+ * @brief Remove the LRU entry from the hash table
+ * @return 0, if success
+ *         non-zero, if fail
+ */
+int hash_table_remove(lru_entry* hd);
 #endif
