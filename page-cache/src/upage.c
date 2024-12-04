@@ -1,5 +1,6 @@
 #include "upage.h"
 #include "umalloc.h"
+#include "cache_api.h"
 #include <spdk/env.h>
 #include <spdk/memory.h>
 #include <string.h>
@@ -13,7 +14,7 @@ typedef struct page_free_list
 
 page* mem_map;
 void* PHYS_BASE;
-lru_cache lru_list = {NULL, NULL, 0};
+lru_cache lru_list = {NULL, NULL};
 struct page_free_list free_list = {NULL, 0};
 
 int init_page_cache(void)
@@ -79,7 +80,7 @@ void free_page(page* target_page)
     memcpy(&page_cnt, page_data_addr, PAGE_HEADER_SIZE);
 
     /* free all pages of the file */
-    for (int i = 0;i < page_cnt;i++)
+    for (unsigned int i = 0;i < page_cnt;i++)
     {
         /* move page to the head of free list */
         tmp_page = target_page;
@@ -169,12 +170,12 @@ void write_to_buffer(page* page, void* buffer)
     void* page_data_addr = ((char*)PHYS_BASE) + ((page - mem_map) * PAGE_SIZE);
 
     /* get the number of pages in this file */
-    memcpy(page_cnt, page_data_addr, PAGE_HEADER_SIZE);
+    memcpy(&page_cnt, page_data_addr, PAGE_HEADER_SIZE);
 
     /* write the data in the file to user's buffer */
     memcpy(buffer, page_data_addr + PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE); // write first page
     data_offset = PAGE_SIZE - PAGE_HEADER_SIZE;
-    for (int i = 1;i < page_cnt;i++)
+    for (unsigned int i = 1;i < page_cnt;i++)
     {
         page = page->next; // move to next page
         page_data_addr = ((char*)PHYS_BASE) + ((page - mem_map) * PAGE_SIZE);
@@ -183,14 +184,15 @@ void write_to_buffer(page* page, void* buffer)
     }
 }
 
-int uread(char* path_name, unsigned int page_index, void* buffer)
+int uread(char* path_name, void* buffer)
 {
-    page* target_page = hash_table_lookup(path_name);
+    hash_entry* target_entry = hash_table_lookup(path_name);
+    page* target_page = target_entry->lru_entry_ptr->page_ptr;
 
     if (target_page != NULL) // if the page is in the hash table (which means it is in the LRU list)
     {
         /* move the file to the head of LRU list */
-        move_to_lru_head(&lru_list, target_page);
+        move_to_lru_head(&lru_list, target_entry->lru_entry_ptr);
 
         /* write the data into user's buffer */
         write_to_buffer(target_page, buffer);
@@ -203,12 +205,11 @@ int uread(char* path_name, unsigned int page_index, void* buffer)
 
         /*setting infomation of new page */
         target_page->path_name = path_name;
-        target_page->index = page_index;
+        target_page->index = 0;
         target_page->flag |= PG_lru;
 
         read_pio(target_page, PHYS_BASE, mem_map);
-        move_to_lru_head(&lru_list, target_page);
-        hash_table_insert(path_name, target_page);
+        add_to_lru_head(&lru_list, target_page);
 
         /*write the data into user's buffer*/
         write_to_buffer(target_page, buffer);
@@ -220,9 +221,12 @@ int uread(char* path_name, unsigned int page_index, void* buffer)
 int main(int argc, char* argv[])
 {
     init_page_cache();
-    void* temp_write = malloc(PAGE_SIZE);
-    sprintf(temp_write, "%d", rand() % 1000000);
+    char* temp_write = "test";
+    void* temp_read = malloc(PAGE_SIZE);
     uwrite("test_file", temp_write);
+    uread("test_file", temp_read);
+    printf("%p\n", temp_read);
+    free(temp_read);
     exit_page_cache();
     return 0;
 }
