@@ -1,7 +1,7 @@
 #ifndef UPIO_H
 #define UPIO_H
 
-#include "upage.h"
+#include "utypes.h"
 #include "umalloc.h"
 #include "lru.h"
 
