@@ -116,14 +116,21 @@ int uclose(uFILE* stream)
     return 0;
 }
 
-size_t uwrite(void* buffer, size_t size, size_t count, FILE* stream);
+size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
 {
-    const unsigned int DATA_LEN = strlen(data);
-    const unsigned int DATA_PAGES = (strlen(data) + PAGE_HEADER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE ; // ceiling division to calculate the pages
+    if ((stream->flags) & U_OREAD == 0) // if U_OREAD is 0, this file cannot be written to; return 0
+    {
+        return 0;
+    }
+
+    char* path_name = stream->path_name;
+    const unsigned int DATA_LEN = size * count;
+    const unsigned int DATA_PAGES = (DATA_LEN + PAGE_HEADER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE ; // ceiling division to calculate the pages
     unsigned int data_offset = 0;
     unsigned int index = 0;
     bool isLastPage = false;
     bool isFirstPage = true;
+
     while (isLastPage == false) // The data has not yet been written
     {
         unsigned int copy_len;
@@ -153,7 +160,7 @@ size_t uwrite(void* buffer, size_t size, size_t count, FILE* stream);
             memcpy(page_data_addr, &hd, PAGE_HEADER_SIZE);
 
             // Copy the data chunk into the package
-            memcpy(page_data_addr + PAGE_HEADER_SIZE, data, copy_len);
+            memcpy(page_data_addr + PAGE_HEADER_SIZE, buffer, copy_len);
 
             data_offset += (copy_len + PAGE_HEADER_SIZE);
             if(unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE))
@@ -179,14 +186,21 @@ size_t uwrite(void* buffer, size_t size, size_t count, FILE* stream);
             isLastPage = false;
         }
 
-        memcpy(page_data_addr, data + data_offset, copy_len);
+        memcpy(page_data_addr, buffer + data_offset, copy_len);
 
         add_to_lru_head(&lru_list, new_page);
         data_offset += copy_len;
         index++;
     }
 
-    return 0;
+    if (unlikely(data_offset == DATA_LEN))
+    {
+        return data_offset / size;
+    }
+    else
+    {
+        return count;
+    }
 }
 
 // for uread
