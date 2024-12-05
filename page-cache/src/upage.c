@@ -261,7 +261,6 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-
     if (uwrite(dataToWrite, sizeof(char), dataSize, file) != dataSize)
     {
         perror("Failed to write to file");
@@ -272,14 +271,12 @@ int main(int argc, char* argv[])
 
     printf("Data written to file: \"%s\"\n", dataToWrite);
 
-
     file = uopen("example.bin", "rb");
     if (file == NULL)
     {
         perror("Failed to open file for reading");
         return EXIT_FAILURE;
     }
-
 
     if (uread(buffer, sizeof(char), dataSize, file) != dataSize)
     {
