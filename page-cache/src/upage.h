@@ -130,7 +130,7 @@ int uclose(uFILE* stream);
  *
  * @return The total number of elements successfully written. If this number differs from `nmemb`, an error may have occurred.
  */
-size_t uwrite(void* buffer, size_t size, size_t count, FILE* stream);
+size_t uwrite(const void* buffer, size_t size, size_t count, FILE* stream);
 
 
 /**
