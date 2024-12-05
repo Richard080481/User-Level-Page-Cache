@@ -116,7 +116,7 @@ int uclose(uFILE* stream)
     return 0;
 }
 
-int uwrite(char* path_name, char* data)
+size_t uwrite(void* buffer, size_t size, size_t count, FILE* stream);
 {
     const unsigned int DATA_LEN = strlen(data);
     const unsigned int DATA_PAGES = (strlen(data) + PAGE_HEADER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE ; // ceiling division to calculate the pages
@@ -190,7 +190,7 @@ int uwrite(char* path_name, char* data)
 }
 
 // for uread
-void write_to_buffer(page* page, void* buffer)
+void write_to_buffer(void* buffer, size_t size, size_t count, page* page)
 {
     unsigned int page_cnt = 0; // the number of pages in this file
     unsigned int data_offset = 0; // the number of bytes written to the buffer
@@ -211,9 +211,9 @@ void write_to_buffer(page* page, void* buffer)
     }
 }
 
-int uread(char* path_name, void* buffer)
+size_t uread(void* buffer, size_t size, size_t count, FILE* stream)
 {
-    hash_entry* target_entry = hash_table_lookup(path_name);
+    hash_entry* target_entry = hash_table_lookup(stream->path_name);
 
     if (target_entry != NULL) // if the page is in the hash table (which means it is in the LRU list)
     {
@@ -222,7 +222,7 @@ int uread(char* path_name, void* buffer)
 
         /* write the data into user's buffer */
         page* target_page = target_entry->lru_entry_ptr->page_ptr;
-        write_to_buffer(target_page, buffer);
+        write_to_buffer(buffer, size, count, target_page);
     }
     else
     {
@@ -231,7 +231,7 @@ int uread(char* path_name, void* buffer)
         if (unlikely(!target_page)) {return -1;} // failed to get a new page, return
 
         /*setting infomation of new page */
-        target_page->path_name = path_name;
+        target_page->path_name = stream->path_name;
         target_page->index = 0;
         target_page->flag |= PG_lru;
 
@@ -239,7 +239,7 @@ int uread(char* path_name, void* buffer)
         add_to_lru_head(&lru_list, target_page);
 
         /*write the data into user's buffer*/
-        write_to_buffer(target_page, buffer);
+        write_to_buffer(buffer, size, count, target_page);
     }
 
     return 0;

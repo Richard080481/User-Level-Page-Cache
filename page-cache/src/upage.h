@@ -11,59 +11,60 @@
 #define PAGE_HEADER_SIZE sizeof(header)
 
 /**
- * @brief Initialize shared memory
+ * @brief Initialize the shared memory for the page cache.
  *
- * This function sets up the shared memory
+ * This function sets up the shared memory region where the page cache will reside.
+ * It allocates necessary resources and prepares the system for subsequent caching operations.
  *
- * @return 0 if the initialization is successful, non-zero if it fails.
+ * @return 0 if the initialization is successful, non-zero if there is a failure.
  */
 int init_page_cache(void);
 
 /**
- * @brief Unlink shared memory
+ * @brief Clean up and disconnect from the shared memory.
  *
- * This function cleans up by disconnecting from shared memory
+ * This function shuts down the page cache system by disconnecting from the shared memory,
+ * freeing any allocated resources.
  *
- * @return 0 if the shutdown is successful, non-zero if it fails.
+ * @return 0 if the shutdown is successful, non-zero if there is a failure.
  */
 int exit_page_cache(void);
 
 /**
- * @brief Link to shared memory.
+ * @brief Link to the shared memory region for the page cache.
  *
- * This function connects the process to the shared memory that holds the
- * page cache data.
+ * This function connects the current process to the shared memory region that holds the
+ * page cache data, allowing access to cached pages.
  *
- * @return 0 if the linking is successful, non-zero if it fails.
+ * @return 0 if the linking is successful, non-zero if there is a failure.
  */
 int link_page_cache(void);
 
 /**
- * @brief Unlink shared memory.
+ * @brief Unlink from the shared memory region.
  *
- * This function disconnects the process from the shared memory, effectively
- * ending the session with the page cache.
+ * This function disconnects the current process from the shared memory region,
+ * effectively ending the session with the page cache.
  *
- * @return 0 if the unlinking is successful, non-zero if it fails.
+ * @return 0 if the unlinking is successful, non-zero if there is a failure.
  */
 int unlink_page_cache(void);
 
 /**
- * @brief Forcefully unlink shared memory (used for debugging).
+ * @brief Forcefully unlink from shared memory (debugging only).
  *
- * This function unlinks the shared memory without locking, allowing for
- * immediate disconnection from the page cache. It is intended for debugging
- * purposes.
+ * This function forcibly unlinks the shared memory region without locking,
+ * providing an immediate disconnection from the page cache. This is used primarily for debugging purposes.
  *
  * @return No return value.
  */
 void force_exit_page_cache(void);
 
 /**
- * @brief Print information about the page cache mapping.
+ * @brief Print the current state and layout of the page cache.
  *
- * This function outputs the current state and layout of the page cache
- * mapping for debugging or monitoring purposes.
+ * This function outputs information about the page cache's structure, mapping, and status
+ * for debugging or monitoring purposes.
  *
  * @return No return value.
  */
@@ -72,18 +73,18 @@ void info_page_cache(void);
 /**
  * @brief Allocate a new page in the page cache.
  *
- * This function allocates a page from the page cache. If successful, the
- * address of the allocated page is returned.
+ * This function allocates a new page in the page cache. If successful, the pointer to the allocated page
+ * is returned, which can be used for subsequent operations.
  *
- * @return Pointer to the allocated page if successful, NULL if allocation fails.
+ * @return Pointer to the allocated page if successful, NULL if the allocation fails.
  */
 page* alloc_page(void);
 
 /**
- * @brief Free a page and return it to the free page list.
+ * @brief Free a page and return it to the available pool.
  *
- * This function frees the specified page and returns it to the list of free
- * pages available for reuse in the page cache.
+ * This function frees a specified page and returns it to the list of free pages,
+ * making it available for reuse in the page cache.
  *
  * @param page Pointer to the page to be freed.
  *
@@ -94,66 +95,68 @@ void free_page(page* page);
 /**
  * @brief Open a file for reading or writing.
  *
- * This function opens a file and returns a user-defined file pointer (`uFILE`)
- * for subsequent read or write operations on the file.
+ * This function opens a file and returns a user-defined file pointer (`uFILE`), which can be used for
+ * subsequent read or write operations on the file.
  *
  * @param filename The name of the file to be opened.
  * @param mode The mode in which the file is to be opened (e.g., "r", "w", "rw").
  *
- * @return A pointer to the opened file stream if successful, NULL if the
- *         operation fails.
+ * @return A pointer to the opened file stream if successful, NULL if the operation fails.
  */
 uFILE* uopen(const char* filename, const char* mode);
 
 /**
- * @brief Close the opened file stream.
+ * @brief Close the specified user-defined file stream.
  *
- * This function closes the specified user-defined file stream, releasing
- * any resources associated with the stream.
+ * This function closes the user-defined file stream, releasing any resources associated with it.
  *
  * @param stream The user-defined file stream to be closed.
  *
- * @return 0 if successful, non-zero if the operation fails.
+ * @return 0 if the close operation is successful, non-zero if it fails.
  */
 int uclose(uFILE* stream);
 
 /**
- * @brief Write data to the page cache.
+ * @brief Write data to a file stream.
  *
- * This function writes data to the page cache associated with a specified
- * file (identified by its path name).
+ * This function writes data from the buffer pointed to by `ptr` to the file stream specified by `stream`.
+ * The data is written in chunks of size `size`, and the total number of elements written is `nmemb`.
+ * The function returns the total number of elements successfully written, which may be less than `nmemb` if an error occurs.
  *
- * @param path_name The path name of the file to be written to.
- * @param data The data to be written to the page cache.
+ * @param buffer A pointer to the data to be written.
+ * @param size The size (in bytes) of each element to be written.
+ * @param count The number of elements to write.
+ * @param stream A pointer to the `FILE` object that identifies the stream.
  *
- * @return 0 if the write is successful, non-zero if the operation fails.
+ * @return The total number of elements successfully written. If this number differs from `nmemb`, an error may have occurred.
  */
-int uwrite(char* path_name, char* data);
+size_t uwrite(void* buffer, size_t size, size_t count, FILE* stream);
+
 
 /**
  * @brief Read data from the page cache.
  *
- * This function reads data from the page cache into a specified buffer for
- * the file identified by its path name.
+ * This function reads data from the page cache and stores it in a user-provided buffer.
+ * It accesses the page cache for the file identified by its path name.
  *
  * @param path_name The path name of the file to read from.
  * @param buffer The buffer where the read data will be stored.
  *
- * @return 0 if the read is successful, non-zero if the operation fails.
+ * @return 0 if the read operation is successful, non-zero if it fails.
  */
-int uread(char* path_name, void* buffer);
+size_t uread(void* buffer, size_t size, size_t count, FILE* stream);
 
 /**
- * @brief Write the contents of a page to the user's buffer.
+ * @brief Copy the contents of a page to a user buffer.
  *
- * This function copies the contents of a specified page into a buffer provided
- * by the user, allowing access to the data stored in the page cache.
+ * This function writes the data from a specified page in the page cache into a buffer provided by the user.
+ * This allows the user to access the data stored in the page cache.
  *
  * @param page Pointer to the page whose contents will be written to the buffer.
- * @param buffer The buffer to which the page data will be written.
+ * @param buffer The buffer where the page data will be written.
  *
  * @return No return value.
  */
-void write_to_buffer(page* page, void* buffer);
+void write_to_buffer(void* buffer, size_t size, size_t count, page* page);
 
 #endif
