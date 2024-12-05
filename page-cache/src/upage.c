@@ -108,7 +108,7 @@ uFILE* uopen(const char* filename, const char* mode)
     return puf;
 }
 
-int fclose(uFILE* stream)
+int uclose(uFILE* stream)
 {
     stream->path_name = "\0";
     stream->mode = U_INVALID;
