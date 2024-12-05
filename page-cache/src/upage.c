@@ -98,6 +98,24 @@ void free_page(page* target_page)
     }
 }
 
+uFILE* uopen(const char* filename, const char* mode)
+{
+    uFILE* puf = umalloc_dma(sizeof(uFILE));
+    puf->path_name = filename;
+    if (strchr(mode, 'r')) {temp->mode |= U_OREAD;}
+    if (strchr(mode, 'w')) {temp->mode |= U_OWRITE;}
+    if (strchr(mode, '+')) {temp->mode |= U_REMOVE;}
+    return puf;
+}
+
+int fclose(uFILE* stream)
+{
+    stream->path_name = "\0";
+    stream->mode = U_INVALID;
+    free(stream);
+    return 0;
+}
+
 int uwrite(char* path_name, char* data)
 {
     const unsigned int DATA_LEN = strlen(data);
