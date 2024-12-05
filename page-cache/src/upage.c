@@ -138,9 +138,10 @@ int uwrite(char* path_name, char* data)
             memcpy(page_data_addr + PAGE_HEADER_SIZE, data, copy_len);
 
             data_offset += (copy_len + PAGE_HEADER_SIZE);
-            if(unlikely(DATA_LEN < PAGE_SIZE))
+            if(unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE))
             {
-                isLastPage = true;
+                add_to_lru_head(&lru_list, new_page);
+                break;
             }
             else
             {
@@ -233,7 +234,7 @@ int main(int argc, char* argv[])
     printf("I am writing: %s\n", temp_write);
     uwrite("test_file", temp_write);
     uread("test_file", temp_read);
-    printf("%p\n", temp_read);
+    printf("I am reading: %s\n", (char*)temp_read);
     free(temp_read);
     exit_page_cache();
     return 0;
