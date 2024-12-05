@@ -11,20 +11,18 @@
 #define PAGE_HEADER_SIZE sizeof(header)
 
 /**
- * @brief Initialize shared memory and wake up worker threads.
+ * @brief Initialize shared memory
  *
- * This function sets up the shared memory and starts the worker threads that
- * handle operations related to the page cache.
+ * This function sets up the shared memory
  *
  * @return 0 if the initialization is successful, non-zero if it fails.
  */
 int init_page_cache(void);
 
 /**
- * @brief Unlink shared memory and shut down worker threads.
+ * @brief Unlink shared memory
  *
- * This function cleans up by disconnecting from shared memory and stopping
- * any running worker threads associated with the page cache.
+ * This function cleans up by disconnecting from shared memory
  *
  * @return 0 if the shutdown is successful, non-zero if it fails.
  */
