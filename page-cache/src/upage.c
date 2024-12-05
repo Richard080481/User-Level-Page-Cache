@@ -248,13 +248,58 @@ int uread(char* path_name, void* buffer)
 int main(int argc, char* argv[])
 {
     init_page_cache();
-    char* temp_write = "test";
-    void* temp_read = malloc(PAGE_SIZE);
-    printf("I am writing: %s\n", temp_write);
-    uwrite("test_file", temp_write);
-    uread("test_file", temp_read);
-    printf("I am reading: %s\n", (char*)temp_read);
-    free(temp_read);
+
+    const char *dataToWrite = "This is a test message.";
+    char buffer[128];
+    uFILE *file;
+    size_t dataSize = strlen(dataToWrite) + 1;
+
+    file = uopen("example.bin", "wb");
+    if (file == NULL)
+    {
+        perror("Failed to open file for writing");
+        return EXIT_FAILURE;
+    }
+
+
+    if (uwrite(dataToWrite, sizeof(char), dataSize, file) != dataSize)
+    {
+        perror("Failed to write to file");
+        uclose(file);
+        return EXIT_FAILURE;
+    }
+    uclose(file);
+
+    printf("Data written to file: \"%s\"\n", dataToWrite);
+
+
+    file = uopen("example.bin", "rb");
+    if (file == NULL)
+    {
+        perror("Failed to open file for reading");
+        return EXIT_FAILURE;
+    }
+
+
+    if (uread(buffer, sizeof(char), dataSize, file) != dataSize)
+    {
+        perror("Failed to read from file");
+        uclose(file);
+        return EXIT_FAILURE;
+    }
+    uclose(file);
+
+    printf("Data read from file: \"%s\"\n", buffer);
+
+    if (strcmp(dataToWrite, buffer) == 0)
+    {
+        printf("The data matches!\n");
+    }
+    else
+    {
+        printf("The data does not match.\n");
+    }
+
     exit_page_cache();
     return 0;
 }
