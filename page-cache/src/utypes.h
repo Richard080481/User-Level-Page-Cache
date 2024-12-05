@@ -54,4 +54,18 @@ typedef struct Header
     unsigned int PAGES;         // How many pages in the file header.
 } header;
 
+enum uFILE_flags
+{
+    U_INVALID = 0x00;
+    U_OREAD = 0x01,
+    U_OWRITE = 0x02,
+    U_REMOVE = 0x04,
+};
+
+typedef struct uFILE
+{
+    const char* path_name;
+    const unsigned int mode = 0;
+} uFILE;
+
 #endif
