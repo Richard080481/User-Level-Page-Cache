@@ -1,5 +1,17 @@
 # Development Log
 
+## Date: 2024-12-11 Richard & Bonnie
+
+### Today's Progress
+- Fix write_to_buffer
+- separate main to app.c
+- Fix the problem that add every page to lru_cache
+
+### Plans for Tomorrow
+- Modify the way to read page_cnt
+- Check the page index problem
+- Check what will happen went page_cache is too small
+
 ## Date: 2024-12-05 Richard & Bonnie
 
 ### Today's Progress
