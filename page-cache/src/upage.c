@@ -149,9 +149,8 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         if (unlikely(isFirstPage == true))
         {
             isFirstPage = false;
-            header hd;
-            hd.PAGES = DATA_PAGES;
-
+            header* hd = (header*)umalloc_dma(sizeof(header));
+            hd->PAGES = DATA_PAGES;
             // If the first page is also last page
             if (unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE)) {isLastPage = true;}
 
@@ -164,6 +163,7 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
             memcpy(page_data_addr + PAGE_HEADER_SIZE, buffer, copy_len);
 
             data_offset += (copy_len + PAGE_HEADER_SIZE);
+            free(hd);
             if(unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE))
             {
                 add_to_lru_head(&lru_list, new_page);
@@ -200,6 +200,7 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
 // for uread
 size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
 {
+    header* hd = (header*)umalloc_dma(sizeof(header));
     unsigned int page_cnt = 0; // the number of pages in this file
     size_t data_offset = 0; // the number of bytes written to the buffer
     size_t request_byte = size * count; // the number of bytes user request to read
@@ -207,7 +208,10 @@ size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
     void* page_data_addr = ((char*)PHYS_BASE) + ((page - mem_map) * PAGE_SIZE);
 
     /* get the number of pages in this file */
-    memcpy(&page_cnt, page_data_addr, PAGE_HEADER_SIZE);
+    memcpy(hd, page_data_addr, PAGE_HEADER_SIZE);
+    if(unlikely(hd == NULL)) {printf("ERROR: write_to_buffer hd is NULL\n");}
+    page_cnt = hd->PAGES;
+    printf("%d\n", hd->PAGES);
 
     /* write the data in the file to user's buffer */
     if (unlikely(request_byte < PAGE_SIZE - PAGE_HEADER_SIZE))
@@ -218,6 +222,7 @@ size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
     {
         copy_byte = PAGE_SIZE - PAGE_HEADER_SIZE;
     }
+
     memcpy(buffer, page_data_addr + PAGE_HEADER_SIZE, copy_byte); // write first page
     data_offset = PAGE_SIZE - PAGE_HEADER_SIZE;
     request_byte-=data_offset;
@@ -236,8 +241,12 @@ size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
         memcpy(buffer + data_offset, page_data_addr, copy_byte);
         data_offset+=copy_byte; // modify data offset
         request_byte-=PAGE_SIZE;
-        if(request_byte == 0) {break;}
+        if(request_byte == 0)
+        {
+            break;
+        }
     }
+
     return data_offset / size;
 }
 

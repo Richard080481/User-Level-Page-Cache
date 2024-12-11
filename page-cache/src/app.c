@@ -5,7 +5,7 @@
 int main(int argc, char* argv[])
 {
     init_page_cache();
-    int STRING_LENGTH = 13;
+    int STRING_LENGTH = 13000;
     char* test_string = (char*)malloc(STRING_LENGTH + 1);
     if (test_string == NULL)
     {
@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
         free(test_string);
         return 1;
     }
-
     if(uwrite(test_string, sizeof(int), STRING_LENGTH, file) != (size_t)STRING_LENGTH) {printf("ERROR: uwrite\n");}
+
     uclose(file);
     printf("String written to file successfully.\n");
 
@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
         free(read_string);
         return 1;
     }
+
     uread(read_string, sizeof(int), STRING_LENGTH, file);
     read_string[STRING_LENGTH] = '\0';
     uclose(file);
