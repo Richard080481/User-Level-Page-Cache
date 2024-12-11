@@ -193,40 +193,56 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         index++;
     }
 
-    if (unlikely(data_offset == DATA_LEN))
-    {
-        return data_offset / size;
-    }
-    else
-    {
-        return count;
-    }
+    return data_offset / size;
 }
 
 // for uread
-void write_to_buffer(void* buffer, size_t size, size_t count, page* page)
+size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
 {
     unsigned int page_cnt = 0; // the number of pages in this file
     unsigned int data_offset = 0; // the number of bytes written to the buffer
+    unsigned int request_byte = size * count; // the number of bytes user request to read
+    unsigned int copy_byte = 0;
     void* page_data_addr = ((char*)PHYS_BASE) + ((page - mem_map) * PAGE_SIZE);
 
     /* get the number of pages in this file */
     memcpy(&page_cnt, page_data_addr, PAGE_HEADER_SIZE);
 
     /* write the data in the file to user's buffer */
-    memcpy(buffer, page_data_addr + PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE); // write first page
+    if (unlikely(request_byte < PAGE_SIZE - PAGE_HEADER_SIZE))
+    {
+        copy_byte = request_byte;
+    }
+    else
+    {
+        copy_byte = PAGE_SIZE - PAGE_HEADER_SIZE;
+    }
+    memcpy(buffer, page_data_addr + PAGE_HEADER_SIZE, copy_byte); // write first page
     data_offset = PAGE_SIZE - PAGE_HEADER_SIZE;
+    request_byte-=data_offset;
     for (unsigned int i = 1;i < page_cnt;i++)
     {
         page = page->next; // move to next page
         page_data_addr = ((char*)PHYS_BASE) + ((page - mem_map) * PAGE_SIZE);
-        memcpy(buffer + data_offset, page_data_addr, PAGE_SIZE);
-        data_offset+=PAGE_SIZE; // modify data offset
+        if (unlikely(request_byte < PAGE_SIZE))
+        {
+            copy_byte = request_byte;
+        }
+        else
+        {
+            copy_byte = PAGE_SIZE;
+        }
+        memcpy(buffer + data_offset, page_data_addr, copy_byte);
+        data_offset+=copy_byte; // modify data offset
+        request_byte-=PAGE_SIZE;
+        if(request_byte == 0) {break;}
     }
+    return data_offset / size;
 }
 
-size_t uread(void* buffer, size_t size, size_t count, FILE* stream)
+size_t uread(void* buffer, size_t size, size_t count, uFILE* stream)
 {
+    unsigned int write_cnt;
     hash_entry* target_entry = hash_table_lookup(stream->path_name);
 
     if (target_entry != NULL) // if the page is in the hash table (which means it is in the LRU list)
@@ -236,7 +252,7 @@ size_t uread(void* buffer, size_t size, size_t count, FILE* stream)
 
         /* write the data into user's buffer */
         page* target_page = target_entry->lru_entry_ptr->page_ptr;
-        write_to_buffer(buffer, size, count, target_page);
+        write_cnt = write_to_buffer(buffer, size, count, target_page);
     }
     else
     {
@@ -253,10 +269,10 @@ size_t uread(void* buffer, size_t size, size_t count, FILE* stream)
         add_to_lru_head(&lru_list, target_page);
 
         /*write the data into user's buffer*/
-        write_to_buffer(buffer, size, count, target_page);
+        write_cnt = write_to_buffer(buffer, size, count, target_page);
     }
 
-    return 0;
+    return write_cnt;
 }
 
 int main(int argc, char* argv[])
