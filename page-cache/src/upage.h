@@ -103,7 +103,7 @@ void free_page(page* page);
  *
  * @return A pointer to the opened file stream if successful, NULL if the operation fails.
  */
-uFILE* uopen(const char* filename, const char* mode);
+uFILE* uopen(char* filename, const char* mode);
 
 /**
  * @brief Close the specified user-defined file stream.
@@ -130,7 +130,7 @@ int uclose(uFILE* stream);
  *
  * @return The total number of elements successfully written. If this number differs from `nmemb`, an error may have occurred.
  */
-size_t uwrite(const void* buffer, size_t size, size_t count, FILE* stream);
+size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream);
 
 
 /**
@@ -144,7 +144,7 @@ size_t uwrite(const void* buffer, size_t size, size_t count, FILE* stream);
  *
  * @return 0 if the read operation is successful, non-zero if it fails.
  */
-size_t uread(void* buffer, size_t size, size_t count, FILE* stream);
+size_t uread(void* buffer, size_t size, size_t count, uFILE* stream);
 
 /**
  * @brief Copy the contents of a page to a user buffer.
@@ -157,6 +157,6 @@ size_t uread(void* buffer, size_t size, size_t count, FILE* stream);
  *
  * @return No return value.
  */
-void write_to_buffer(void* buffer, size_t size, size_t count, page* page);
+size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page);
 
 #endif
