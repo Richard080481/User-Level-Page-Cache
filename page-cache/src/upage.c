@@ -131,6 +131,9 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
     unsigned int index = 0;
     bool isLastPage = false;
     bool isFirstPage = true;
+    page* prev_page = NULL;
+
+    int i = 0;
 
     while (isLastPage == false) // The data has not yet been written
     {
@@ -144,6 +147,11 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         new_page->flag |= PG_dirty;
         new_page->index = index;
         new_page->path_name = path_name;
+        new_page->next = NULL;
+
+        /* setting page's next point to next page */
+        if(isFirstPage == false) {prev_page->next = new_page;}
+        prev_page = new_page;
 
         /* Write the data into new page */
         if (unlikely(isFirstPage == true))
@@ -157,16 +165,16 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
             copy_len = (isLastPage) ? DATA_LEN : PAGE_SIZE - PAGE_HEADER_SIZE;
 
             // Copy the header into the package
-            memcpy(page_data_addr, &hd, PAGE_HEADER_SIZE);
+            memcpy(page_data_addr, hd, PAGE_HEADER_SIZE);
 
             // Copy the data chunk into the package
             memcpy(page_data_addr + PAGE_HEADER_SIZE, buffer, copy_len);
 
             data_offset += (copy_len + PAGE_HEADER_SIZE);
             free(hd);
+            add_to_lru_head(&lru_list, new_page);
             if(unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE))
             {
-                add_to_lru_head(&lru_list, new_page);
                 break;
             }
             else
@@ -189,7 +197,6 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
 
         memcpy(page_data_addr, buffer + data_offset, copy_len);
 
-        add_to_lru_head(&lru_list, new_page);
         data_offset += copy_len;
         index++;
     }
