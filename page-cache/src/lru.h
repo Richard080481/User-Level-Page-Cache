@@ -47,6 +47,12 @@ void move_to_lru_head(lru_cache* lru_list, lru_entry* hd);
  */
 int remove_from_lru(lru_cache* lru_list, lru_entry* hd);
 
+void print_all_pages(page* head);
+
+void print_lru_entry(lru_entry* entry);
+
+void print_lru_cache(lru_cache* cache);
+
 /**
  * @brief Count the hash value for the given path name.
  *

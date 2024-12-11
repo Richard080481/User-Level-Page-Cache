@@ -49,6 +49,62 @@ int remove_from_lru(lru_cache* lru_list, lru_entry* hd)
     return 0;
 }
 
+void print_all_pages(page* head) {
+    if (head == NULL) {
+        printf("No pages to display. The list is empty.\n");
+        return;
+    }
+
+    page* current = head;
+    int count = 1;  // To track the number of pages in the list
+
+    while (current != NULL) {
+        printf("\n--- Page %d ---\n", count);
+        printf("Flag: %u\n", current->flag);
+        printf("Path Name: %s\n", current->path_name);
+        printf("Index: %u\n", current->index);
+        printf("Next Page: %p\n", current->next);
+
+        current = current->next;  // Move to the next page in the list
+        count++;
+    }
+}
+
+void print_lru_entry(lru_entry* entry) {
+    if (entry == NULL) {
+        printf("LRU Entry is NULL\n");
+        return;
+    }
+    print_all_pages(entry->page_ptr);
+    printf("LRU Entry Info:\n");
+    printf("Page Pointer: %p\n", entry->page_ptr);
+    printf("Previous LRU Entry: %p\n", entry->prev);
+    printf("Next LRU Entry: %p\n", entry->next);
+}
+
+void print_lru_cache(lru_cache* cache) {
+    if (cache == NULL) {
+        printf("LRU Cache is NULL\n");
+        return;
+    }
+
+    printf("LRU Cache Info:\n");
+
+    lru_entry* current_entry = cache->head;
+    if (current_entry == NULL) {
+        printf("LRU Cache is empty\n");
+        return;
+    }
+
+    int count = 1;  // To keep track of the number of entries in the list
+    while (current_entry != NULL) {
+        printf("\n--- Entry %d ---\n", count);
+        print_lru_entry(current_entry);
+        current_entry = current_entry->next;
+        count++;
+    }
+}
+
 unsigned int hash_function(char* path_name)
 {
     unsigned int hash = 0;

@@ -200,7 +200,7 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         data_offset += copy_len;
         index++;
     }
-
+    print_lru_cache(&lru_list);
     return count;
 }
 
@@ -218,7 +218,6 @@ size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
     memcpy(hd, page_data_addr, PAGE_HEADER_SIZE);
     if(unlikely(hd == NULL)) {printf("ERROR: write_to_buffer hd is NULL\n");}
     page_cnt = hd->PAGES;
-    printf("%d\n", hd->PAGES);
 
     /* write the data in the file to user's buffer */
     if (unlikely(request_byte < PAGE_SIZE - PAGE_HEADER_SIZE))
