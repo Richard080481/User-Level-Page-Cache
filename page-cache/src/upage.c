@@ -193,14 +193,7 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         index++;
     }
 
-    if (unlikely(data_offset == DATA_LEN))
-    {
-        return data_offset / size;
-    }
-    else
-    {
-        return count;
-    }
+    return count;
 }
 
 // for uread
@@ -262,54 +255,60 @@ size_t uread(void* buffer, size_t size, size_t count, uFILE* stream)
 int main(int argc, char* argv[])
 {
     init_page_cache();
+    int STRING_LENGTH = 13000;
+    char *test_string = (char *)malloc(STRING_LENGTH + 1);
+    if (test_string == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        return 1;
+    }
 
-    const char *dataToWrite = "This is a test message.";
-    char buffer[128];
-    uFILE *file;
-    size_t dataSize = strlen(dataToWrite) + 1;
+    for (int i = 0; i < STRING_LENGTH; i++)
+    {
+        test_string[i] = '0' + (i % 10);
+    }
+    test_string[STRING_LENGTH] = '\0';
 
-    file = uopen("example.bin", "wb");
+    uFILE *file = uopen("test_output.txt", "w");
     if (file == NULL)
     {
-        perror("Failed to open file for writing");
-        return EXIT_FAILURE;
+        printf("Failed to open file for writing.\n");
+        free(test_string);
+        return 1;
     }
-
-    if (uwrite(dataToWrite, sizeof(char), dataSize, file) != dataSize)
-    {
-        perror("Failed to write to file");
-        uclose(file);
-        return EXIT_FAILURE;
-    }
+    fprintf(file, "%s", test_string);
     uclose(file);
+    printf("String written to file successfully.\n");
 
-    printf("Data written to file: \"%s\"\n", dataToWrite);
-
-    file = uopen("example.bin", "rb");
+    char *read_string = (char *)malloc(STRING_LENGTH + 1);
+    if (read_string == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        free(test_string);
+        return 1;
+    }
+    file = uopen("test_output.txt", "r");
     if (file == NULL)
     {
-        perror("Failed to open file for reading");
-        return EXIT_FAILURE;
+        printf("Failed to open file for reading.\n");
+        free(test_string);
+        free(read_string);
+        return 1;
     }
-
-    if (uread(buffer, sizeof(char), dataSize, file) != dataSize)
-    {
-        perror("Failed to read from file");
-        uclose(file);
-        return EXIT_FAILURE;
-    }
+    uread(read_string, 1, STRING_LENGTH, file);
+    read_string[STRING_LENGTH] = '\0';
     uclose(file);
 
-    printf("Data read from file: \"%s\"\n", buffer);
+    if (strcmp(test_string, read_string) == 0)
+    {
+        printf("Read and write are correct.\n");
+    } else
+    {
+        printf("Mismatch in read and write.\n");
+    }
 
-    if (strcmp(dataToWrite, buffer) == 0)
-    {
-        printf("The data matches!\n");
-    }
-    else
-    {
-        printf("The data does not match.\n");
-    }
+    free(test_string);
+    free(read_string);
 
     exit_page_cache();
     return 0;
