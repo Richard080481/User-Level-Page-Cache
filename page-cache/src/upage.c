@@ -300,7 +300,6 @@ int main(int argc, char* argv[])
         free(test_string);
         return 1;
     }
-    fprintf(file, "%s", test_string);
     uclose(file);
     printf("String written to file successfully.\n");
 
