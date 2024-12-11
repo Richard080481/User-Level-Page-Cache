@@ -1,5 +1,18 @@
 # Development Log
 
+## Date: 2024-12-05 Richard & Bonnie
+
+### Today's Progress
+- Add data structure of ufile
+- Add uopen and uclose
+- Modify parameters of uwrite and uread to match POSIX semantics
+- Fix segmentation fault
+
+### Plans for Tomorrow
+- Modify uwrite to add '\0' in the of of each page
+- Fix uread and write_to_buffer
+- Fix uwrite return value
+
 ## Date: 2024-12-04 Richard & Bonnie
 
 ### Today's Progress
@@ -8,7 +21,7 @@
 
 ### Plans for Tomorrow
 - Think about how to implement umalloc
-- Fix segamentation fault
+- Fix segmentation fault
 
 ## Date: 2024-11-28 Richard & Bonnie
 
