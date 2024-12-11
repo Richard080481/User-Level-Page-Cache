@@ -56,7 +56,7 @@ typedef struct Header
 
 enum uFILE_flags
 {
-    U_INVALID = 0x00;
+    U_INVALID = 0x00,
     U_OREAD = 0x01,
     U_OWRITE = 0x02,
     U_REMOVE = 0x04,
@@ -64,8 +64,8 @@ enum uFILE_flags
 
 typedef struct uFILE
 {
-    const char* path_name;
-    unsigned int mode = 0;
+    char* path_name;
+    unsigned int mode;
 } uFILE;
 
 #endif

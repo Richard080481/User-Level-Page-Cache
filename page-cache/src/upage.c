@@ -102,6 +102,7 @@ uFILE* uopen(const char* filename, const char* mode)
 {
     uFILE* puf = umalloc_dma(sizeof(uFILE));
     puf->path_name = filename;
+    puf->mode = 0x00;
     if (strchr(mode, 'r')) {puf->mode |= U_OREAD;}
     if (strchr(mode, 'w')) {puf->mode |= U_OWRITE;}
     if (strchr(mode, '+')) {puf->mode |= U_REMOVE;}
