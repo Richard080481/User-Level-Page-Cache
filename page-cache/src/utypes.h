@@ -65,7 +65,7 @@ enum uFILE_flags
 typedef struct uFILE
 {
     const char* path_name;
-    const unsigned int mode = 0;
+    unsigned int mode = 0;
 } uFILE;
 
 #endif

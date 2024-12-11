@@ -102,9 +102,9 @@ uFILE* uopen(const char* filename, const char* mode)
 {
     uFILE* puf = umalloc_dma(sizeof(uFILE));
     puf->path_name = filename;
-    if (strchr(mode, 'r')) {temp->mode |= U_OREAD;}
-    if (strchr(mode, 'w')) {temp->mode |= U_OWRITE;}
-    if (strchr(mode, '+')) {temp->mode |= U_REMOVE;}
+    if (strchr(mode, 'r')) {puf->mode |= U_OREAD;}
+    if (strchr(mode, 'w')) {puf->mode |= U_OWRITE;}
+    if (strchr(mode, '+')) {puf->mode |= U_REMOVE;}
     return puf;
 }
 
@@ -118,7 +118,7 @@ int uclose(uFILE* stream)
 
 size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
 {
-    if ((stream->flags) & U_OREAD == 0) // if U_OREAD is 0, this file cannot be written to; return 0
+    if ((stream->mode) & U_OREAD == 0) // if U_OREAD is 0, this file cannot be written to; return 0
     {
         return 0;
     }
