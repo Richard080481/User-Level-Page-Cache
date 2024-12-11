@@ -133,8 +133,6 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
     bool isFirstPage = true;
     page* prev_page = NULL;
 
-    int i = 0;
-
     while (isLastPage == false) // The data has not yet been written
     {
         unsigned int copy_len;
