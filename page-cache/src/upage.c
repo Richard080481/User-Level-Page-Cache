@@ -201,9 +201,9 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
 size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
 {
     unsigned int page_cnt = 0; // the number of pages in this file
-    unsigned int data_offset = 0; // the number of bytes written to the buffer
-    unsigned int request_byte = size * count; // the number of bytes user request to read
-    unsigned int copy_byte = 0;
+    size_t data_offset = 0; // the number of bytes written to the buffer
+    size_t request_byte = size * count; // the number of bytes user request to read
+    size_t copy_byte = 0;
     void* page_data_addr = ((char*)PHYS_BASE) + ((page - mem_map) * PAGE_SIZE);
 
     /* get the number of pages in this file */
@@ -243,7 +243,7 @@ size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
 
 size_t uread(void* buffer, size_t size, size_t count, uFILE* stream)
 {
-    unsigned int write_cnt;
+    size_t write_cnt;
     hash_entry* target_entry = hash_table_lookup(stream->path_name);
 
     if (target_entry != NULL) // if the page is in the hash table (which means it is in the LRU list)

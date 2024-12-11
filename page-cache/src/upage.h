@@ -142,7 +142,7 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream);
  * @param path_name The path name of the file to read from.
  * @param buffer The buffer where the read data will be stored.
  *
- * @return 0 if the read operation is successful, non-zero if it fails.
+ * @return The total number of elements successfully read. If this number differs from `nmemb`, an error may have occurred.
  */
 size_t uread(void* buffer, size_t size, size_t count, uFILE* stream);
 
@@ -155,7 +155,7 @@ size_t uread(void* buffer, size_t size, size_t count, uFILE* stream);
  * @param page Pointer to the page whose contents will be written to the buffer.
  * @param buffer The buffer where the page data will be written.
  *
- * @return No return value.
+ * @return The total number of elements successfully written to buffer. If this number differs from `nmemb`, an error may have occurred.
  */
 size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page);
 
