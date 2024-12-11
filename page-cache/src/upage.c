@@ -252,6 +252,16 @@ size_t uread(void* buffer, size_t size, size_t count, uFILE* stream)
         move_to_lru_head(&lru_list, target_entry->lru_entry_ptr);
 
         /* write the data into user's buffer */
+        if (target_entry->lru_entry_ptr == NULL)
+        {
+            printf("ERROR: target_entry->lru_entry_ptr\n");
+            return -1;
+        }
+        if (target_entry->lru_entry_ptr->page_ptr == NULL)
+        {
+            printf("ERROR: target_entry->lru_entry_ptr->page_ptr\n");
+            return -1;
+        }
         page* target_page = target_entry->lru_entry_ptr->page_ptr;
         write_cnt = write_to_buffer(buffer, size, count, target_page);
     }
@@ -259,7 +269,11 @@ size_t uread(void* buffer, size_t size, size_t count, uFILE* stream)
     {
         /*if the page is not in the page cache*/
         page* target_page = alloc_page();
-        if (unlikely(!target_page)) {return -1;} // failed to get a new page, return
+        if (unlikely(!target_page))
+        {
+            printf("ERROR: target_page\n");
+            return -1;
+        } // failed to get a new page, return
 
         /*setting infomation of new page */
         target_page->path_name = stream->path_name;

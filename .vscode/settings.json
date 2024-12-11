@@ -6,7 +6,8 @@
         "upio.h": "c",
         "cache_api.h": "c",
         "string.h": "c",
-        "error.h": "c"
+        "error.h": "c",
+        "lru.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
