@@ -35,7 +35,6 @@ void read_pio(page* pg, void* PHYS_BASE, page* mem_map)
     struct pio* head = create_pio(pg->path_name, 0, pg->index, operation, page_data_addr, 1);
     submit_pio(head);
     free_pio(head);
-
     /* get the number of pages for the given path */
     unsigned int page_cnt = 0;
     memcpy(&page_cnt, page_data_addr, PAGE_HEADER_SIZE);

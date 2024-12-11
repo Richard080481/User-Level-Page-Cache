@@ -6,6 +6,8 @@ void add_to_lru_head(lru_cache* lru_list, page* pg)
 {
     lru_entry* hd = (lru_entry*)umalloc_share(SHM_NAME, sizeof(lru_entry));
     hd->page_ptr = pg;
+    hd->prev = NULL;
+    hd->next = NULL;
 
     /* set the data of new page */
     hd->page_ptr->flag |= PG_lru;

@@ -246,7 +246,7 @@ size_t uread(void* buffer, size_t size, size_t count, uFILE* stream)
     size_t write_cnt;
     hash_entry* target_entry = hash_table_lookup(stream->path_name);
 
-    if (target_entry != NULL) // if the page is in the hash table (which means it is in the LRU list)
+    if (target_entry != NULL) // if the page is in the hash table (which means it is in the LRU list
     {
         /* move the file to the head of LRU list */
         move_to_lru_head(&lru_list, target_entry->lru_entry_ptr);

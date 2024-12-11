@@ -27,8 +27,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    if(uwrite(test_string, sizeof(int), STRING_LENGTH, file) != (size_t)STRING_LENGTH)
-    {printf("ERROR: uwrite\n");}
+    if(uwrite(test_string, sizeof(int), STRING_LENGTH, file) != (size_t)STRING_LENGTH) {printf("ERROR: uwrite\n");}
     uclose(file);
     printf("String written to file successfully.\n");
 
