@@ -5,6 +5,20 @@
 int main(int argc, char* argv[])
 {
     init_page_cache();
+/*
+    int* test_write = (int*)malloc(sizeof(int) *2);
+    int* test_read = (int*)malloc(sizeof(int) *2);
+    test_write[0] = 10;
+    test_write[1] = 11;
+    uFILE* file = uopen("test_output.txt", "w");
+    uwrite(test_write, sizeof(int), 1, file);
+    uclose(file);
+    file = uopen("test_output.txt", "r");
+    uread(test_read, sizeof(int), 1, file);
+    uclose(file);
+    printf("test read[0] = %d\n", test_read[0]);
+    printf("test read[1] = %d\n", test_read[1]);
+*/
     int STRING_LENGTH = 13000;
     char* test_string = (char*)malloc(STRING_LENGTH + 1);
 
@@ -47,8 +61,7 @@ int main(int argc, char* argv[])
         free(read_string);
         return 1;
     }
-
-    uread(read_string, sizeof(int), STRING_LENGTH, file);
+    uread(read_string, sizeof(char), STRING_LENGTH, file);
     read_string[STRING_LENGTH] = '\0';
     uclose(file);
     //printf("this is test string : %s\n", test_string);
@@ -61,8 +74,8 @@ int main(int argc, char* argv[])
         printf("Mismatch in read and write.\n");
     }
 
-    //free(test_string);
-    //free(read_string);
+    free(test_string);
+    free(read_string);
 
     exit_page_cache();
     return 0;
