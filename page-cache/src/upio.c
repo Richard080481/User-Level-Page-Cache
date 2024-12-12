@@ -6,10 +6,12 @@
 void write_pio(page* p, void* PHYS_BASE, page* mem_map)
 {
     /* get the number of pages for the given path */
+    header* hd =umalloc_dma(sizeof(header));
     unsigned int page_cnt = 0;
     void* page_data_addr = ((char*)PHYS_BASE) + ((p - mem_map) * PAGE_SIZE);
-    memcpy(&page_cnt, page_data_addr, PAGE_HEADER_SIZE);
-
+    memcpy(hd, page_data_addr, PAGE_HEADER_SIZE);
+    page_cnt = hd->PAGES;
+    ufree(hd);
     /* creat pio head */
     operate operation = WRITE;
     struct pio* head = create_pio(p->path_name, 0, p->index, operation, page_data_addr, page_cnt); // creat pio for the first page
@@ -36,9 +38,11 @@ void read_pio(page* pg, void* PHYS_BASE, page* mem_map)
     submit_pio(head);
     free_pio(head);
     /* get the number of pages for the given path */
+    header* hd = umalloc_dma(sizeof(header));
     unsigned int page_cnt = 0;
-    memcpy(&page_cnt, page_data_addr, PAGE_HEADER_SIZE);
-
+    memcpy(hd, page_data_addr, PAGE_HEADER_SIZE);
+    page_cnt = hd->PAGES;
+    ufree(hd);
     /* creat pio head (head is the second page of the path) */
     page_cnt--; // the first page has already been read
 
