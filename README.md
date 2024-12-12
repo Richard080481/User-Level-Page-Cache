@@ -1,5 +1,17 @@
 # Development Log
 
+## Date: 2024-12-12 Richard & Bonnie
+
+### Today's Progress
+- Fix the way to get page count
+- Fix the page index problem
+- Fix uwrite data offset
+
+### Plans for Tomorrow
+- Check what will happen went page_cache is too small
+- Modify uwrite and uread to support other data types
+- Add warning for incorrect argument (uwrite : sizeof(char), uread : sizeof(int), count)
+
 ## Date: 2024-12-11 Richard & Bonnie
 
 ### Today's Progress
