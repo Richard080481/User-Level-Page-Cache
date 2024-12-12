@@ -68,6 +68,7 @@ void print_all_pages(page* head) {
         current = current->next;  // Move to the next page in the list
         count++;
     }
+    printf("\n");
 }
 
 void print_lru_entry(lru_entry* entry) {
@@ -80,6 +81,7 @@ void print_lru_entry(lru_entry* entry) {
     printf("Page Pointer: %p\n", entry->page_ptr);
     printf("Previous LRU Entry: %p\n", entry->prev);
     printf("Next LRU Entry: %p\n", entry->next);
+    printf("\n");
 }
 
 void print_lru_cache(lru_cache* cache) {
@@ -103,6 +105,7 @@ void print_lru_cache(lru_cache* cache) {
         current_entry = current_entry->next;
         count++;
     }
+    printf("\n");
 }
 
 unsigned int hash_function(char* path_name)
