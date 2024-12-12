@@ -97,7 +97,7 @@ void free_page(page* target_page)
         target_page = target_page->next;
         free_list.nr_free++;
     }
-    ufree(header);
+    ufree(hd);
     return;
 }
 
