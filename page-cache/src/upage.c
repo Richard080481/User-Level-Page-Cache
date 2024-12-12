@@ -172,9 +172,10 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
             // Copy the data chunk into the package
             memcpy(page_data_addr + PAGE_HEADER_SIZE, buffer, copy_len);
 
-            data_offset += (copy_len + PAGE_HEADER_SIZE);
+            data_offset = copy_len;
             ufree(hd);
             add_to_lru_head(&lru_list, new_page);
+            printf("--%d---\n%s\n", index-1,(char*)(page_data_addr + PAGE_HEADER_SIZE));
             if(unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE))
             {
                 break;
@@ -198,6 +199,8 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         }
 
         memcpy(page_data_addr, buffer + data_offset, copy_len);
+
+        printf("--%d---\ndata offset = %d\ncopy len = %d\n%s\n", index-1,data_offset, copy_len, (char*)page_data_addr);
 
         data_offset += copy_len;
     }
