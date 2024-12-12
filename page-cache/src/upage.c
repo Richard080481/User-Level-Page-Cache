@@ -76,9 +76,10 @@ void free_page(page* target_page)
     /* get the number of pages for the given path */
     page* tmp_page = target_page; // the address of the page that will be freed
     void* page_data_addr = ((char*)PHYS_BASE) + ((target_page - mem_map) * PAGE_SIZE);
+    header* hd = umalloc_dma(sizeof(header));
     unsigned int page_cnt = 0;
-    memcpy(&page_cnt, page_data_addr, PAGE_HEADER_SIZE);
-
+    memcpy(hd, page_data_addr, PAGE_HEADER_SIZE);
+    page_cnt = hd->PAGES;
     /* free all pages of the file */
     for (unsigned int i = 0;i < page_cnt;i++)
     {
@@ -96,6 +97,8 @@ void free_page(page* target_page)
         target_page = target_page->next;
         free_list.nr_free++;
     }
+    ufree(header);
+    return;
 }
 
 uFILE* uopen(char* filename, const char* mode)
@@ -113,7 +116,7 @@ int uclose(uFILE* stream)
 {
     stream->path_name = "\0";
     stream->mode = U_INVALID;
-    free(stream);
+    ufree(stream);
     return 0;
 }
 
@@ -170,7 +173,7 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
             memcpy(page_data_addr + PAGE_HEADER_SIZE, buffer, copy_len);
 
             data_offset += (copy_len + PAGE_HEADER_SIZE);
-            free(hd);
+            ufree(hd);
             add_to_lru_head(&lru_list, new_page);
             if(unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE))
             {
