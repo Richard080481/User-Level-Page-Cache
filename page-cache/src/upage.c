@@ -146,6 +146,7 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         new_page->index = index;
         new_page->path_name = path_name;
         new_page->next = NULL;
+        index++;
 
         /* setting page's next point to next page */
         if(isFirstPage == false) {prev_page->next = new_page;}
@@ -196,7 +197,6 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         memcpy(page_data_addr, buffer + data_offset, copy_len);
 
         data_offset += copy_len;
-        index++;
     }
     print_lru_cache(&lru_list);
     return count;
@@ -216,7 +216,6 @@ size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
     memcpy(hd, page_data_addr, PAGE_HEADER_SIZE);
     if(unlikely(hd == NULL)) {printf("ERROR: write_to_buffer hd is NULL\n");}
     page_cnt = hd->PAGES;
-
     /* write the data in the file to user's buffer */
     if (unlikely(request_byte < PAGE_SIZE - PAGE_HEADER_SIZE))
     {
