@@ -15,7 +15,7 @@ typedef struct page_free_list
 page* mem_map;
 void* PHYS_BASE;
 lru_cache lru_list = {NULL, NULL};
-struct page_free_list free_list = {NULL, 0};
+page_free_list free_list = {NULL, 0};
 
 int init_page_cache(void)
 {
