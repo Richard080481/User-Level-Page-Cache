@@ -9,7 +9,7 @@
 
 void* umalloc_dma(size_t len)
 {
-    return malloc(len);
+    return alloc_dma_buffer(len);
 }
 
 void* umalloc_share(char* shm_name, size_t len)
@@ -37,7 +37,7 @@ void* umalloc_share(char* shm_name, size_t len)
 
 void ufree(void* free_addr)
 {
-    free(free_addr);
+    free_dma_buffer(free_addr);
 }
 
 // void* link_shm(char* shm_name, size_t shm_size) {
