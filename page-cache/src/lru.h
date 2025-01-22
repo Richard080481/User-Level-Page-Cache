@@ -11,7 +11,7 @@ extern hash_entry* hash_table[CACHE_SIZE];  // Global hash table to store the ca
 /**
  * @brief add a new page to the head of the LRU (Least Recently Used) list.
  *
- * This function moves the specified page to the head of the LRU list,
+ * This function moves the specified page to the head of the LRU list
  * making it the most recently used.
  *
  * @param lru_list The LRU cache list.

@@ -1,10 +1,11 @@
 #include "lru.h"
+#include "upage.h"
 
 hash_entry* hash_table[CACHE_SIZE] = {NULL};
 
 void add_to_lru_head(lru_cache* lru_list, page* pg)
 {
-    lru_entry* hd = (lru_entry*)umalloc_share(SHM_NAME, sizeof(lru_entry));
+    lru_entry* hd = (lru_entry*)umalloc_dma(sizeof(lru_entry));
     hd->page_ptr = pg;
     hd->prev = NULL;
     hd->next = NULL;
@@ -39,6 +40,9 @@ int remove_from_lru(lru_cache* lru_list, lru_entry* hd)
         perror("ERROR: remove_from_lru not found in hash table");
         return 1;
     }
+
+    /* free all page of the path name */
+    free_page(hd->page_ptr);
 
     /* Remove the page from the list */
     if (hd->prev) {hd->prev->next = hd->next;} // modify head's previous page
@@ -138,31 +142,63 @@ void hash_table_insert(lru_entry* hd)
 {
     char* path_name = hd->page_ptr->path_name;
     const unsigned int hash_index = hash_function(path_name);
-    hash_entry* new_entry = (hash_entry*)umalloc_share(SHM_NAME, sizeof(hash_entry));
+    hash_entry* new_entry = (hash_entry*)umalloc_dma(sizeof(hash_entry));
 
     /*Set the information in the hash entry*/
     new_entry->lru_entry_ptr = hd;
-    if (hash_table[hash_index] == NULL) {hash_table[hash_index] = new_entry;}
-    else {hash_table[hash_index]->next = new_entry;}
+    new_entry->next = NULL;
+    if (hash_table[hash_index] == NULL)
+    {
+        hash_table[hash_index] = new_entry;
+    }
+    else
+    {
+        hash_table[hash_index]->next = new_entry;
+    }
 }
 
 int hash_table_remove(lru_entry* hd)
 {
     char* path_name = hd->page_ptr->path_name;
-    hash_entry* lookup_entry = hash_table_lookup(path_name);
-    if (unlikely(lookup_entry == NULL))
+    const unsigned int hash_index = hash_function(path_name);
+    hash_entry* current = hash_table[hash_index];
+    hash_entry* prev = NULL;
+    bool find = false;
+
+    if (unlikely(current == NULL))
     {
         return 1; // not found;
     }
     else
     {
-        if(lookup_entry->next == NULL) {ufree(lookup_entry);}
-        else
+        /* Check if the entry must be removed; if not, proceed to the next entry */
+        while (current)
         {
-            hash_entry* remove_hash_entry = lookup_entry;
-            lookup_entry = lookup_entry->next;
-            ufree(remove_hash_entry);
+            if (strcmp(current->lru_entry_ptr->page_ptr->path_name, path_name) == 0) // If the current entry is the target entry
+            {
+                if (prev == NULL)
+                {
+                    hash_table[hash_index] = current->next;
+                }
+                else
+                {
+                    prev->next = current->next;
+                }
+                find = true; // find the hash entry
+                free_dma_buffer(current);
+                break;
+            }
+            prev = current;
+            current = current->next; // move on to the next entry
         }
     }
-    return 0;
+
+    if(unlikely(find == false))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
