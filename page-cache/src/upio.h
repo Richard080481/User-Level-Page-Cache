@@ -12,7 +12,8 @@
 void write_pio(page* p, void* PHYS_BASE, page* mem_map);
 /**
  * @brief send pio(read) to dm-cache
- * @return No return value
+ * @return return 0, if success
+ *         total page count, if file is bigger than page size
  */
-void read_pio(page* p, void* PHYS_BASE, page* mem_map);
+unsigned int read_pio(page* p, void* PHYS_BASE, page* mem_map);
 #endif
