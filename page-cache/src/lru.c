@@ -153,7 +153,8 @@ void hash_table_insert(lru_entry* hd)
     }
     else
     {
-        hash_table[hash_index]->next = new_entry;
+        new_entry->next = hash_table[hash_index];
+        hash_table[hash_index] = new_entry;
     }
 }
 
