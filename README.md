@@ -1,5 +1,17 @@
 # Development Log
 
+## Date: 2025-01-22 Bonnie
+
+### Today's Progress
+- Handle the case where the file size exceeds the cache size
+- Fix the bug where the page is not returned to the free list after the file is removed from the LRU
+- Modify ufree() to use SPDK's function
+
+### Plans for Tomorrow
+- Use fio to test the performance
+- Modify uwrite and uread to support other data types
+- Add warning for incorrect argument (uwrite : sizeof(char), uread : sizeof(int), count)
+
 ## Date: 2024-12-12 Richard & Bonnie
 
 ### Today's Progress
