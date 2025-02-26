@@ -2,7 +2,7 @@
 ioengine=libaio
 direct=1
 bs=4k
-size=1G
+size=512MB
 runtime=60
 time_based=1
 group_reporting=1
