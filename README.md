@@ -46,6 +46,6 @@ success or failure.
 Run the SPDK configure script to enable fio
 ```bash
     cd spdk
-    ./configure --with-fio=/path/to/fio/repo <other configuration options>
+    ./configure --with-fio=/path/to/fio/repo
     make
 ```
