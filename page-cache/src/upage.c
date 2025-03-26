@@ -6,6 +6,7 @@
 #include <spdk/memory.h>
 #include <string.h>
 #include <error.h>
+#include <sys/mman.h>
 
 typedef struct page_free_list
 {
@@ -30,6 +31,10 @@ int init_page_cache(void)
     mem_map = (page*)umalloc_dma(CACHE_SIZE * (size_t)sizeof(page)); // allocate space for struct PAGE
     PHYS_BASE =  umalloc_dma(CACHE_SIZE * PAGE_SIZE);
 
+    /* lock page cache into memory */
+    if (mlock(mem_map, CACHE_SIZE * (size_t)sizeof(page)) != 0) { perror("mlock fail\n"); }
+    if (mlock(PHYS_BASE, CACHE_SIZE * PAGE_SIZE) != 0) { perror("mlock fail\n"); }
+
     /* put all free pages int free list */
     for (int i = 0;i < CACHE_SIZE;i++)
     {
@@ -43,6 +48,10 @@ int init_page_cache(void)
 
 int exit_page_cache(void)
 {
+    /* unlock page cache into memory */
+    if (munlock(mem_map, CACHE_SIZE * (size_t)sizeof(page)) != 0) { perror("munlock fail\n"); }
+    if (munlock(PHYS_BASE, CACHE_SIZE * PAGE_SIZE) != 0) { perror("minlock fail\n"); }
+
     free_dma_buffer(mem_map);
     free_dma_buffer(PHYS_BASE);
     exit_ssd_cache();
@@ -299,7 +308,6 @@ size_t uread(void* buffer, size_t size, size_t count, uFILE* stream)
 {
     size_t write_cnt;
     hash_entry* target_entry = hash_table_lookup(stream->path_name);
-
     page* target_page = alloc_page();
     if (unlikely(!target_page))
     {
