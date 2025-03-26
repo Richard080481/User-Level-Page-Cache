@@ -8,15 +8,23 @@
 #include "utypes.h"
 
 static int myfio_init(struct thread_data *td) {
-    init_page_cache();
+    if (init_page_cache() != 0) {
+        fprintf(stderr, "Failed to initialize page cache\n");
+        return 1;
+    }
+    fprintf(stderr, "Page cache initialized successfully\n");
     return 0;
 }
 
 static void myfio_cleanup(struct thread_data *td) { exit_page_cache(); }
 
 static int myfio_iomem_alloc(struct thread_data *td, size_t total_mem) {
-    td->orig_buffer = umalloc_dma(PAGE_SIZE);
-    return td->orig_buffer == NULL;
+    td->orig_buffer = alloc_dma_buffer(PAGE_SIZE << 3);
+    if (td->orig_buffer == NULL) {
+        fprintf(stderr, "Failed to allocate DMA memory\n");
+        return 1;
+    }
+    return 0;
 }
 
 static void myfio_iomem_free(struct thread_data *td) { ufree(td->orig_buffer); }
@@ -26,9 +34,18 @@ static enum fio_q_status myfio_queue(struct thread_data *td, struct io_u *io_u) 
     switch (io_u->ddir) {
         case DDIR_READ:
             file = uopen(io_u->file->file_name, "r");
+
+            if (!file) {
+                fprintf(stderr, "Failed to open file for reading: %s\n", io_u->file->file_name);
+            }
+            uread(io_u->xfer_buf, sizeof(char), io_u->buflen, file);
             break;
         case DDIR_WRITE:
             file = uopen(io_u->file->file_name, "w");
+            if (!file) {
+                fprintf(stderr, "Failed to open file for writing: %s\n", io_u->file->file_name);
+            }
+            uwrite(io_u->xfer_buf, sizeof(char), io_u->buflen, file);
             break;
         default:
             assert(false);
