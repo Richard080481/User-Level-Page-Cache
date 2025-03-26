@@ -1,15 +1,15 @@
 [global]
-ioengine=/home/hsu/spdk/build/fio/ssd-cache-tester
+ioengine=/home/eecs2024/spdk/build/fio/ssd-cache-tester
 thread=1
 direct=1
 iodepth=1
-rw=randwrite
+rw=randread
 bs=4KB
 time_based=1
-runtime=10
-size=512MB
+runtime=60
+size=1GB
 
 [job1]
 filename=testfile
 
-;sudo /home/hsu/fio/fio /home/hsu/User-Level-Page-Cache/dm-cache/fio/ssd-cache-tester/randread_4KB.fio
+;sudo /home/eecs2024/fio/fio /home/eecs2024/User-Level-Page-Cache/dm-cache/fio/ssd-cache-tester/randread_4KB.fio

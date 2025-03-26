@@ -3,14 +3,14 @@ ioengine=psync
 thread=1
 direct=1
 iodepth=1
-rw=randread
-bs=4KB
+rw=write
+bs=32KB
 time_based=1
-runtime=10
+runtime=60
 size=1GB
 
 [filename0]
 filename=testfile
 
-;sudo /home/hyam/fio/fio /home/hyam/ssd-cache/fio/fio_engines/psync.fio
+;sudo /home/eecs2024/fio/fio /home/eecs2024/User-Level-Page-Cache/dm-cache/fio/fio_engines/psync.fio
 

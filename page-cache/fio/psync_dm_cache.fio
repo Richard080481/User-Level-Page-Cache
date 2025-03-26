@@ -1,0 +1,15 @@
+[global]
+ioengine=psync
+thread=1
+direct=0
+iodepth=1
+rw=read
+bs=32KB
+time_based=1
+runtime=60
+size=1GB
+
+[filename0]
+filename=/mnt/lv-ext4-cached/testfile
+
+;sudo /home/eecs2024/fio/fio /home/eecs2024/User-Level-Page-Cache/page-cache/fio/psync_dm_cache.fio

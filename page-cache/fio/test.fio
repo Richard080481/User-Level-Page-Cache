@@ -2,12 +2,12 @@
 ioengine=libaio
 direct=1
 bs=4k
-size=512MB
-runtime=60
-time_based=1
+size=1GB
 group_reporting=1
+time_based=1
+runtime=60
 
-[rand_rw]
-filename=testfile
-rw=randrw
-numjobs=1
+[job1]
+filename=/dev/sda
+rw=write
+

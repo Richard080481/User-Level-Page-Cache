@@ -21,7 +21,7 @@
                     "params": {
                         "trtype": "PCIe",
                         "name": "Nvme0",
-                        "traddr": "0000:04:00.0"
+                        "traddr": "0000:06:00.0"
                     }
                 }
             ]
