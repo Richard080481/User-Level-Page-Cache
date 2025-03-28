@@ -125,6 +125,9 @@ uFILE* uopen(char* filename, const char* mode)
 
 int uclose(uFILE* stream)
 {
+    lru_entry* stream_hd_page = hash_table_lookup(stream->path_name)->lru_entry_ptr;
+    write_pio(stream_hd_page->page_ptr, PHYS_BASE, mem_map); // write the page into ssd
+    remove_from_lru(&lru_list, stream_hd_page); // remove lru entry (remove all pages of the file)
     stream->path_name = "\0";
     stream->mode = U_INVALID;
     free_dma_buffer(stream);
