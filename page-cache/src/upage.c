@@ -103,6 +103,7 @@ void free_page(page* target_page)
         tmp_page->path_name = NULL;
         tmp_page->index = 0;
         tmp_page->flag = 0;
+        tmp_page->next = NULL;
         memset(page_data_addr, '\0', PAGE_SIZE);
 
         /* move to next page */

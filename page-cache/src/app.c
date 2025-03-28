@@ -8,20 +8,20 @@ int main(int argc, char* argv[])
 {
     init_page_cache();
 
-    int* test_write = (int*)malloc(sizeof(int) *2);
-    int* test_read = (int*)malloc(sizeof(int) *2);
-    test_write[0] = 10;
-    test_write[1] = 11;
-    uFILE* file1 = uopen("test_output1.txt", "w");
-    uwrite(test_write, sizeof(int), 1, file1);
-    uclose(file1);
-    file1 = uopen("test_output1.txt", "r");
-    uread(test_read, sizeof(int), 1, file1);
-    uclose(file1);
-    printf("test read[0] = %d\n", test_read[0]);
-    printf("test read[1] = %d\n", test_read[1]);
+    // int* test_write = (int*)malloc(sizeof(int) *2);
+    // int* test_read = (int*)malloc(sizeof(int) *2);
+    // test_write[0] = 10;
+    // test_write[1] = 11;
+    // uFILE* file1 = uopen("test_output1.txt", "w");
+    // uwrite(test_write, sizeof(int), 1, file1);
+    // uclose(file1);
+    // file1 = uopen("test_output1.txt", "r");
+    // uread(test_read, sizeof(int), 1, file1);
+    // uclose(file1);
+    // printf("test read[0] = %d\n", test_read[0]);
+    // printf("test read[1] = %d\n", test_read[1]);
 
-    int STRING_LENGTH = 10;
+    int STRING_LENGTH = 100000;
     char* test_string = (char*)umalloc_dma(STRING_LENGTH + 1);
 
     if (test_string == NULL)
@@ -66,8 +66,8 @@ int main(int argc, char* argv[])
     uread(read_string, sizeof(char), STRING_LENGTH, file);
     read_string[STRING_LENGTH] = '\0';
     uclose(file);
-    printf("this is test string : %s\n", test_string);
-    printf("this is read string : %s\n", read_string);
+    // printf("this is test string : %s\n", test_string);
+    // printf("this is read string : %s\n", read_string);
     if (strcmp(test_string, read_string) == 0)
     {
         printf("Read and write are correct.\n");

@@ -43,12 +43,14 @@ int remove_from_lru(lru_cache* lru_list, lru_entry* hd)
 
     /* free all page of the path name */
     free_page(hd->page_ptr);
-
     /* Remove the page from the list */
     if (hd->prev) {hd->prev->next = hd->next;} // modify head's previous page
     else {lru_list->head = hd->next;} // this page is the head, so the next page becomes the new head
     if(hd->next) hd->next->prev = hd->prev;
     else {lru_list->tail = hd->prev;} // this page is tail, so the previous page becomes the new tail
+
+    hd = NULL;
+    ufree(hd);
 
     return 0;
 }
