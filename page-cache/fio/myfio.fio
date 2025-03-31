@@ -9,7 +9,7 @@ time_based=1
 runtime=60
 
 [job1]
-rw=write
+rw=rw
 filename=testfile
 
 ;sudo /home/eecs2024/fio/fio /home/eecs2024/User-Level-Page-Cache/page-cache/fio/myfio.fio

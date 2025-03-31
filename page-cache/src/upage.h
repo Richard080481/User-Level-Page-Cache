@@ -8,7 +8,7 @@
 #include "upio.h"
 #include "umalloc.h"
 
-#define PAGE_HEADER_SIZE sizeof(header)
+#define PAGE_HEADER_SIZE 10
 
 /**
  * @brief Initialize the shared memory for the page cache.
@@ -115,6 +115,29 @@ uFILE* uopen(char* filename, const char* mode);
  * @return 0 if the close operation is successful, non-zero if it fails.
  */
 int uclose(uFILE* stream);
+
+/**
+ * @brief Converts an unsigned int number into a string representation.
+ *
+ * Converts an unsigned int number into a PAGE_HEADER_SIZE string representation, with the least significant digit first. Any unused digits are padded with '0'.
+ *
+ * @param num The unsigned integer to be converted.
+ * @param buffer A character buffer to store the resulting string.
+ *
+ * @return No return value.
+ */
+void convert_unsigned_int_to_string(unsigned int num, char* len);
+
+/**
+ * @brief Converts a reversed string back into an unsigned int.
+ *
+ * Converts a PAGE_HEADER_SIZE reversed string (where the least significant digit comes first) back into an unsigned int.
+ *
+ * @param buffer A string containing the 32-character reversed representation of a number. The string must only contain numeric characters ('0'-'9').
+ *
+ * @return Returns an unsigned int that represents the integer value of the string.
+ */
+unsigned int convert_string_to_unsigned_int(const char* buffer);
 
 /**
  * @brief Write data to a file stream.

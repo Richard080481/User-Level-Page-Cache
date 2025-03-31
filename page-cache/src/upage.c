@@ -72,6 +72,11 @@ page* alloc_page(void)
     free_list.head = free_list.head->next;
     free_list.nr_free--;
 
+    new_page->flag = 0;
+    new_page->index = 0;
+    new_page->next = NULL;
+    new_page->path_name = NULL;
+
     if(unlikely(!new_page))
     {
         printf("Error: allocate a page failed\n");
@@ -84,10 +89,11 @@ void free_page(page* target_page)
     /* get the number of pages for the given path */
     page* tmp_page = target_page; // the address of the page that will be freed
     void* page_data_addr = ((char*)PHYS_BASE) + ((target_page - mem_map) * PAGE_SIZE);
-    header* hd = umalloc_dma(sizeof(header));
+    // header* hd = umalloc_dma(sizeof(header));
+    char* len = (char*)umalloc_dma(PAGE_HEADER_SIZE);
     unsigned int page_cnt = 0;
-    memcpy(hd, page_data_addr, PAGE_HEADER_SIZE);
-    page_cnt = hd->PAGES;
+    memcpy(len, page_data_addr, PAGE_HEADER_SIZE);
+    page_cnt = convert_string_to_unsigned_int(len);
 
     /* free all pages of the file */
     for (unsigned int i = 0;i < page_cnt;i++)
@@ -95,6 +101,7 @@ void free_page(page* target_page)
         /* move page to the head of free list */
         tmp_page = target_page;
         target_page = target_page->next;
+
         tmp_page->next = free_list.head;
         free_list.head = tmp_page;
 
@@ -103,13 +110,11 @@ void free_page(page* target_page)
         tmp_page->path_name = NULL;
         tmp_page->index = 0;
         tmp_page->flag = 0;
-        tmp_page->next = NULL;
-        memset(page_data_addr, '\0', PAGE_SIZE);
 
         /* move to next page */
         free_list.nr_free++;
     }
-    free_dma_buffer(hd);
+    free_dma_buffer(len);
     return;
 }
 
@@ -135,6 +140,36 @@ int uclose(uFILE* stream)
     return 0;
 }
 
+void convert_unsigned_int_to_string(unsigned int num, char* len)
+{
+    unsigned int index = 0;
+    do
+    {
+        len[index] = '0' + (num % 10);
+        num /= 10;
+        index++;
+    } while (num > 0);
+
+    while (index < PAGE_HEADER_SIZE)
+    {
+        len[index++] = '0';
+    }
+}
+
+unsigned int convert_string_to_unsigned_int(const char* buffer)
+{
+    unsigned int result = 0;
+    unsigned int multiplier = 1;
+
+    for (int i = 0; i < PAGE_HEADER_SIZE && buffer[i] != '0'; i++)
+    {
+        result += (buffer[i] - '0') * multiplier;
+        multiplier *= 10;
+    }
+
+    return result;
+}
+
 size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
 {
     if (((stream->mode) & U_OWRITE) == 0) // if U_OREAD is 0, this file cannot be written to; return 0
@@ -154,19 +189,28 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
     /* if the size of file is bigger than page cache size */
     if (DATA_PAGES > CACHE_SIZE)
     {
-        void* pio_buffer = umalloc_dma(sizeof(header) + DATA_LEN);
+        void* pio_buffer = umalloc_dma(PAGE_HEADER_SIZE + DATA_LEN);
         void* buffer_offset = pio_buffer;
 
-        header* hd = (header*)umalloc_dma(sizeof(header));
-        hd->PAGES = DATA_PAGES;
+        // header* hd = (header*)umalloc_dma(sizeof(header));
+        // hd->PAGES = DATA_PAGES;
 
-        // Copy the header into the package
-        memcpy(pio_buffer, hd, PAGE_HEADER_SIZE);
+        // // Copy the header into the package
+        // memcpy(pio_buffer, hd, PAGE_HEADER_SIZE);
 
-        // Copy the remain data into the package
+        // // Copy the remain data into the package
+        // memcpy(pio_buffer + PAGE_HEADER_SIZE, buffer, DATA_LEN);
+
+        // ufree(hd);
+
+        /* change DATA_LEN into string */
+        char* len = (char*)umalloc_dma(PAGE_HEADER_SIZE);
+        convert_unsigned_int_to_string(DATA_PAGES, len);
+
+        memcpy(pio_buffer, len, PAGE_HEADER_SIZE);
         memcpy(pio_buffer + PAGE_HEADER_SIZE, buffer, DATA_LEN);
 
-        ufree(hd);
+        ufree(len);
 
         /* creat pio head */
         operate operation = WRITE;
@@ -207,21 +251,24 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         if (unlikely(isFirstPage == true))
         {
             isFirstPage = false;
-            header* hd = (header*)umalloc_dma(sizeof(header));
-            hd->PAGES = DATA_PAGES;
+            // header* hd = (header*)umalloc_dma(sizeof(header));
+            // hd->PAGES = DATA_PAGES;
+            char* len = (char*)umalloc_dma(PAGE_HEADER_SIZE);
+            convert_unsigned_int_to_string(DATA_PAGES, len);
+
             // If the first page is also last page
             if (unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE)) {isLastPage = true;}
 
             copy_len = (isLastPage) ? DATA_LEN : PAGE_SIZE - PAGE_HEADER_SIZE;
 
             // Copy the header into the package
-            memcpy(page_data_addr, hd, PAGE_HEADER_SIZE);
+            memcpy(page_data_addr, len, PAGE_HEADER_SIZE);
 
             // Copy the data chunk into the package
-            memcpy(page_data_addr + PAGE_HEADER_SIZE, buffer, copy_len);
+            memcpy(page_data_addr + PAGE_HEADER_SIZE, buffer, copy_len); 
 
             data_offset = copy_len;
-            free_dma_buffer(hd);
+            free_dma_buffer(len);
             add_to_lru_head(&lru_list, new_page);
             // printf("--%d---\n%s\n", index-1,(char*)(page_data_addr + PAGE_HEADER_SIZE));
             if(unlikely(DATA_LEN + PAGE_HEADER_SIZE <= PAGE_SIZE))
@@ -247,20 +294,20 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream)
         }
 
         memcpy(page_data_addr, buffer + data_offset, copy_len);
-
         // printf("--%d---\ndata offset = %d\ncopy len = %d\n%s\n", index-1,data_offset, copy_len, (char*)page_data_addr);
 
         data_offset += copy_len;
     }
     // print_lru_cache(&lru_list);
 
-    return count;
+    return data_offset;
 }
 
 // for uread
 size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
 {
-    header* hd = (header*)umalloc_dma(sizeof(header));
+    // header* hd = (header*)umalloc_dma(sizeof(header));
+    char* len = (char*)umalloc_dma(PAGE_HEADER_SIZE);
     unsigned int page_cnt = 0; // the number of pages in this file
     size_t data_offset = 0; // the number of bytes written to the buffer
     size_t request_byte = size * count; // the number of bytes user request to read
@@ -268,9 +315,9 @@ size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
     void* page_data_addr = ((char*)PHYS_BASE) + ((page - mem_map) * PAGE_SIZE);
 
     /* get the number of pages in this file */
-    memcpy(hd, page_data_addr, PAGE_HEADER_SIZE);
-    if(unlikely(hd == NULL)) {printf("ERROR: write_to_buffer hd is NULL\n");}
-    page_cnt = hd->PAGES;
+    memcpy(len, page_data_addr, PAGE_HEADER_SIZE);
+    // if(unlikely(hd == NULL)) {printf("ERROR: write_to_buffer hd is NULL\n");}
+    page_cnt = convert_string_to_unsigned_int(len);
     /* write the data in the file to user's buffer */
     if (unlikely(request_byte < PAGE_SIZE - PAGE_HEADER_SIZE))
     {
@@ -282,6 +329,7 @@ size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
     }
 
     memcpy(buffer, page_data_addr + PAGE_HEADER_SIZE, copy_byte); // write first page
+
     data_offset = PAGE_SIZE - PAGE_HEADER_SIZE;
     request_byte-=data_offset;
     for (unsigned int i = 1;i < page_cnt;i++)
@@ -304,7 +352,6 @@ size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page)
             break;
         }
     }
-
     return data_offset / size;
 }
 
@@ -354,7 +401,7 @@ size_t uread(void* buffer, size_t size, size_t count, uFILE* stream)
         }
         else // file is bigger than cache size
         {
-            void* pio_buffer = umalloc_dma(sizeof(header) + page_cnt * PAGE_SIZE);
+            void* pio_buffer = umalloc_dma(PAGE_HEADER_SIZE + page_cnt * PAGE_SIZE);
             void* buffer_offset = pio_buffer;
 
             /* creat pio head */
