@@ -7,7 +7,8 @@
         "cache_api.h": "c",
         "string.h": "c",
         "error.h": "c",
-        "lru.h": "c"
+        "lru.h": "c",
+        "umalloc.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
