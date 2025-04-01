@@ -153,7 +153,7 @@ unsigned int convert_string_to_unsigned_int(const char* buffer);
  *
  * @return The total number of elements successfully written. If this number differs from `nmemb`, an error may have occurred.
  */
-size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream);
+size_t uwrite(void* buffer, size_t size, size_t count, uFILE* stream);
 
 
 /**
@@ -170,16 +170,14 @@ size_t uwrite(const void* buffer, size_t size, size_t count, uFILE* stream);
 size_t uread(void* buffer, size_t size, size_t count, uFILE* stream);
 
 /**
- * @brief Copy the contents of a page to a user buffer.
+ * @brief Set the file stream's offset position.
  *
- * This function writes the data from a specified page in the page cache into a buffer provided by the user.
- * This allows the user to access the data stored in the page cache.
+ * This function updates the current offset (`io_offset`) of the given file stream.
+ * It allows repositioning of the read/write pointer within the file.
  *
- * @param page Pointer to the page whose contents will be written to the buffer.
- * @param buffer The buffer where the page data will be written.
- *
- * @return The total number of elements successfully written to buffer. If this number differs from `nmemb`, an error may have occurred.
+ * @param stream Pointer to the user-defined file stream (`uFILE*`).
+ * @param offset The new offset position to be set.
  */
-size_t write_to_buffer(void* buffer, size_t size, size_t count, page* page);
+void useek(uFILE* stream, unsigned int offset);
 
 #endif

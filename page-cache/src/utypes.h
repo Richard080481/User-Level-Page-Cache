@@ -19,7 +19,7 @@ typedef struct PAGE
     unsigned flag;
     char* path_name;
     unsigned int index; // 0 index
-    // struct PAGE* prev;
+    struct PAGE* prev;
     struct PAGE* next;
 }page;
 
@@ -39,14 +39,14 @@ typedef struct lru_entry
 
 typedef struct hash_entry
 {
-    lru_entry* lru_entry_ptr;
+    page* page_ptr;
     struct hash_entry* next;
 } hash_entry;
 
 typedef struct lru_cache
 {
-    lru_entry* head;
-    lru_entry* tail;
+    page* head;
+    page* tail;
 } lru_cache;
 
 typedef struct Header
@@ -66,6 +66,7 @@ typedef struct uFILE
 {
     char* path_name;
     unsigned int mode;
+    unsigned int io_offset;
 } uFILE;
 
 #endif

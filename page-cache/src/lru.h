@@ -4,7 +4,7 @@
 #include "umalloc.h"
 #include "utypes.h"
 
-#define CACHE_SIZE 131072  // Define the size of the cache (hash table size)
+#define CACHE_SIZE 2  // Define the size of the cache (hash table size)
 
 extern hash_entry* hash_table[CACHE_SIZE];  // Global hash table to store the cache entries
 
@@ -32,7 +32,7 @@ void add_to_lru_head(lru_cache* lru_list, page* pg);
  *
  * @return No return value.
  */
-void move_to_lru_head(lru_cache* lru_list, lru_entry* hd);
+void move_to_lru_head(lru_cache* lru_list, page* pg);
 
 /**
  * @brief Remove a page from the LRU list.
@@ -45,13 +45,13 @@ void move_to_lru_head(lru_cache* lru_list, lru_entry* hd);
  *
  * @return 0 if the removal is successful, non-zero if it fails.
  */
-int remove_from_lru(lru_cache* lru_list, lru_entry* hd);
+int remove_from_lru(lru_cache* lru_list, page *pg);
 
-void print_all_pages(page* head);
+// void print_all_pages(page* head);
 
-void print_lru_entry(lru_entry* entry);
+// void print_lru_entry(lru_entry* entry);
 
-void print_lru_cache(lru_cache* cache);
+// void print_lru_cache(lru_cache* cache);
 
 /**
  * @brief Count the hash value for the given path name.
@@ -63,7 +63,7 @@ void print_lru_cache(lru_cache* cache);
  *
  * @return The computed hash value for the path name.
  */
-unsigned int hash_function(char* path_name);
+unsigned int hash_function(char* path_name, unsigned int index);
 
 /**
  * @brief Check whether the path name is present in the hash table.
@@ -75,7 +75,7 @@ unsigned int hash_function(char* path_name);
  *
  * @return The address of the hash entry for the path name, or NULL if not found.
  */
-hash_entry* hash_table_lookup(char* path_name);
+hash_entry* hash_table_lookup(char* path_name, unsigned int index);
 
 /**
  * @brief Insert the LRU entry into the hash table.
@@ -87,7 +87,7 @@ hash_entry* hash_table_lookup(char* path_name);
  *
  * @return No return value.
  */
-void hash_table_insert(lru_entry* hd);
+void hash_table_insert(page* pg);
 
 /**
  * @brief Remove an LRU entry from the hash table.
@@ -99,6 +99,6 @@ void hash_table_insert(lru_entry* hd);
  *
  * @return 0 if the removal is successful, non-zero if it fails.
  */
-int hash_table_remove(lru_entry* hd);
+int hash_table_remove(page* pg);
 
 #endif
