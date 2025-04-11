@@ -70,6 +70,8 @@ void force_exit_page_cache(void);
  */
 void info_page_cache(void);
 
+void* write_back_thread(void* arg);
+
 /**
  * @brief Allocate a new page in the page cache.
  *
@@ -139,6 +141,8 @@ void convert_unsigned_int_to_string(unsigned int num, char* len);
  */
 unsigned int convert_string_to_unsigned_int(const char* buffer);
 
+void dma_complete_cb(void *cb_arg);
+
 /**
  * @brief Write data to a file stream.
  *
@@ -178,6 +182,6 @@ size_t uread(void* buffer, size_t size, size_t count, uFILE* stream);
  * @param stream Pointer to the user-defined file stream (`uFILE*`).
  * @param offset The new offset position to be set.
  */
-void useek(uFILE* stream, unsigned int offset);
+void useek(uFILE* stream, unsigned long long int offset);
 
 #endif

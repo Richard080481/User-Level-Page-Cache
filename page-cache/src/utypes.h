@@ -66,7 +66,7 @@ typedef struct uFILE
 {
     char* path_name;
     unsigned int mode;
-    unsigned int io_offset;
+    unsigned long long int io_offset;
 } uFILE;
 
 #endif

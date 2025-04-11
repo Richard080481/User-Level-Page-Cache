@@ -3,10 +3,8 @@ ioengine=psync
 thread=1
 direct=0
 iodepth=1
-rw=read
-bs=32KB
-time_based=1
-runtime=60
+rw=write
+bs=4KB
 size=1GB
 
 [filename0]

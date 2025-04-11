@@ -13,7 +13,14 @@ void add_to_lru_head(lru_cache* lru_list, page* pg)
     pg->next = lru_list->head;
     lru_list->head = pg;
     if (lru_list->tail == NULL) {lru_list->tail = pg;} // lru list is empty, so the tail is new lru entry
+
+    // struct timespec tt1, tt2;
+    // clock_gettime(CLOCK_REALTIME, &tt1);
+
     hash_table_insert(pg);
+
+    // clock_gettime(CLOCK_REALTIME, &tt2);
+    // printf("hashtable consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 }
 
 void move_to_lru_head(lru_cache* lru_list, page* pg)
@@ -32,19 +39,20 @@ int remove_from_lru(lru_cache* lru_list, page* pg)
 {
     if(unlikely(hash_table_remove(pg) == 1))
     {
+        printf("pathname = %s, index = %d, pg->next = %p\n", pg->path_name, pg->index, pg->next);
         perror("ERROR: remove_from_lru not found in hash table");
+        exit(1);
         return 1;
     }
 
-    /* free all page of the path name */
-    free_page(pg);
     /* Remove the page from the list */
     if (pg->prev) {pg->prev->next = pg->next;} // modify head's previous page
     else {lru_list->head = pg->next;} // this page is the head, so the next page becomes the new head
     if(pg->next) pg->next->prev = pg->prev;
     else {lru_list->tail = pg->prev;} // this page is tail, so the previous page becomes the new tail
 
-    ufree(pg);
+    /* free all page of the path name */
+    free_page(pg);
 
     return 0;
 }
@@ -115,12 +123,12 @@ unsigned int hash_function(char* path_name, unsigned int index)
     {
         hash = (hash * 31) + *path_name++;
     }
-    hash = (hash * 31) + index;
+    hash += index;
     return hash % CACHE_SIZE;
 }
 
 hash_entry* hash_table_lookup(char* path_name, unsigned int index)
-{
+{   
     const unsigned int hash_index = hash_function(path_name, index);
     hash_entry* entry = hash_table[hash_index];
     /*Check if the entry belongs to this page; if not, move on to the next entry*/
@@ -138,8 +146,21 @@ hash_entry* hash_table_lookup(char* path_name, unsigned int index)
 void hash_table_insert(page* pg)
 {
     char* path_name = pg->path_name;
+
+    // struct timespec tt1, tt2;
+    // clock_gettime(CLOCK_REALTIME, &tt1);
+
     const unsigned int hash_index = hash_function(path_name, pg->index);
-    hash_entry* new_entry = (hash_entry*)umalloc_dma(sizeof(hash_entry));
+
+    // clock_gettime(CLOCK_REALTIME, &tt2);
+    // printf("hashfunctionc consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+
+    // clock_gettime(CLOCK_REALTIME, &tt1);
+
+    hash_entry* new_entry = (hash_entry*)malloc(sizeof(hash_entry));
+
+    // clock_gettime(CLOCK_REALTIME, &tt2);
+    // printf("malloc hash entry consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 
     /*Set the information in the hash entry*/
     new_entry->page_ptr = pg;
@@ -153,6 +174,9 @@ void hash_table_insert(page* pg)
         new_entry->next = hash_table[hash_index];
         hash_table[hash_index] = new_entry;
     }
+
+    // clock_gettime(CLOCK_REALTIME, &tt2);
+    // printf("set hash entry consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 }
 
 int hash_table_remove(page* pg)
@@ -183,7 +207,7 @@ int hash_table_remove(page* pg)
                     prev->next = current->next;
                 }
                 find = true; // find the hash entry
-                free_dma_buffer(current);
+                free(current);
                 break;
             }
             prev = current;
@@ -193,6 +217,29 @@ int hash_table_remove(page* pg)
 
     if(unlikely(find == false))
     {
+        printf("hash index = %d\n", hash_index);
+        current = hash_table[hash_index];
+        prev = NULL;
+        while (current)
+        {
+            if (strcmp(current->page_ptr->path_name, path_name) == 0 && (current->page_ptr->index == pg->index)) // If the current entry is the target entry
+            {
+                if (prev == NULL)
+                {
+                    hash_table[hash_index] = current->next;
+                }
+                else
+                {
+                    prev->next = current->next;
+                }
+                find = true; // find the hash entry
+                free(current);
+                break;
+            }
+            printf("current = %p, page index = %d\n", current, current->page_ptr->index);
+            prev = current;
+            current = current->next; // move on to the next entry
+        }
         return 1;
     }
     else

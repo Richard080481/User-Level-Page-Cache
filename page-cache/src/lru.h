@@ -4,7 +4,7 @@
 #include "umalloc.h"
 #include "utypes.h"
 
-#define CACHE_SIZE 2  // Define the size of the cache (hash table size)
+#define CACHE_SIZE  262145 // (131072 = 0.5 GB) Define the size of the cache (hash table size)
 
 extern hash_entry* hash_table[CACHE_SIZE];  // Global hash table to store the cache entries
 

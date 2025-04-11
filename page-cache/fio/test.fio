@@ -1,6 +1,6 @@
 [global]
-ioengine=libaio
-direct=1
+ioengine=psync
+direct=0
 bs=4k
 size=1GB
 group_reporting=1
@@ -8,6 +8,6 @@ time_based=1
 runtime=60
 
 [job1]
-filename=/dev/sda
+filename=testfile
 rw=write
 

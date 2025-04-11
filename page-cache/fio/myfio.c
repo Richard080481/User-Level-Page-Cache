@@ -13,6 +13,22 @@ static int myfio_init(struct thread_data *td) {
         return 1;
     }
     fprintf(stderr, "Page cache initialized successfully\n");
+
+    // THis is warm up
+    // uFILE* file = uopen("testfile", "w");
+    // void* temp_page = umalloc_dma(4096);
+    // char data = 'a';
+    // memset(temp_page, data, 4096);
+    // for (unsigned long long int i = 0;i < 262144;i++)
+    // {
+    //     useek(file, i << 12);
+    //     uwrite(temp_page, sizeof(char), 4096, file);
+    // }
+    // ufree(temp_page);
+    // uclose(file);
+
+    // printf("warm up finish!\n");
+
     return 0;
 }
 
@@ -34,6 +50,7 @@ static enum fio_q_status myfio_queue(struct thread_data *td, struct io_u *io_u) 
     switch (io_u->ddir) {
         case DDIR_READ:
             file = uopen(io_u->file->file_name, "r");
+            useek(file , io_u->offset);
 
             if (!file) {
                 fprintf(stderr, "Failed to open file for reading: %s\n", io_u->file->file_name);
@@ -42,6 +59,7 @@ static enum fio_q_status myfio_queue(struct thread_data *td, struct io_u *io_u) 
             break;
         case DDIR_WRITE:
             file = uopen(io_u->file->file_name, "w");
+            useek(file , io_u->offset);
             if (!file) {
                 fprintf(stderr, "Failed to open file for writing: %s\n", io_u->file->file_name);
             }
