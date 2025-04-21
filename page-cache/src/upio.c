@@ -23,11 +23,9 @@ void write_pio(page* pg, void* PHYS_BASE, page* mem_map)
     // submit_pio(head);
     // free_pio(head);
 
-
     struct pio* head = create_pio(pg->path_name, 0, pg->index, operation, page_data_addr, 1);
     submit_pio(head);
     free_pio(head);
-
 
     // operation = READ;
     // char* buf = (char*)umalloc_dma(PAGE_SIZE);

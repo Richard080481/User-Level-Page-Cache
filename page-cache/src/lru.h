@@ -5,6 +5,7 @@
 #include "utypes.h"
 
 #define CACHE_SIZE  262145 // (131072 = 0.5 GB) Define the size of the cache (hash table size)
+extern page_free_list free_list;
 
 extern hash_entry* hash_table[CACHE_SIZE];  // Global hash table to store the cache entries
 

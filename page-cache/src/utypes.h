@@ -69,4 +69,11 @@ typedef struct uFILE
     unsigned long long int io_offset;
 } uFILE;
 
+
+typedef struct page_free_list
+{
+    page* head;
+    int nr_free;
+} page_free_list;
+
 #endif

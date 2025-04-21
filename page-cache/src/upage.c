@@ -9,12 +9,6 @@
 #include <sys/mman.h>
 #include <pthread.h>
 
-typedef struct page_free_list
-{
-    page* head;
-    int nr_free;
-} page_free_list;
-
 page* mem_map;
 void* PHYS_BASE;
 lru_cache lru_list = {NULL, NULL};
@@ -62,7 +56,7 @@ int exit_page_cache(void)
 void* write_back_thread(void* arg)
 {   
     printf("do write back\n");
-    for (int i = 0;i < (CACHE_SIZE >> 2);i++) // Write back some pages in the page cache.
+    for (int i = 0;i < (CACHE_SIZE >> 1);i++) // Write back some pages in the page cache.
     {
         write_pio(lru_list.tail, PHYS_BASE, mem_map); // write the page into ssd
         remove_from_lru(&lru_list, lru_list.tail); // remove lru entry (remove all pages of the file)
@@ -74,7 +68,6 @@ page* alloc_page(void)
 {
     if (free_list.nr_free == 0) // the number of free page is zero, do write-back
     {
-        printf("write back\n");
         for (int i = 0;i < (CACHE_SIZE >> 1);i++) // Write back some pages in the page cache.
         {
             write_pio(lru_list.tail, PHYS_BASE, mem_map); // write the page into ssd
