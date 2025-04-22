@@ -39,6 +39,8 @@ typedef struct lru_entry
 
 typedef struct hash_entry
 {
+    char* path_name;
+    unsigned int page_index;
     page* page_ptr;
     struct hash_entry* next;
 } hash_entry;

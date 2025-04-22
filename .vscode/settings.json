@@ -8,7 +8,8 @@
         "string.h": "c",
         "error.h": "c",
         "lru.h": "c",
-        "umalloc.h": "c"
+        "umalloc.h": "c",
+        "utypes.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

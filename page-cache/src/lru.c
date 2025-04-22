@@ -84,7 +84,7 @@ hash_entry* hash_table_lookup(char* path_name, unsigned int index)
     /*Check if the entry belongs to this page; if not, move on to the next entry*/
     while (entry)
     {
-        if (strcmp(entry->page_ptr->path_name, path_name) == 0 && (entry->page_ptr->index == index)) // check if the entry belongs to this page
+        if (strcmp(entry->path_name, path_name) == 0 && (entry->page_index == index)) // check if the entry belongs to this page
         {
             return entry;
         }
@@ -97,9 +97,11 @@ void hash_table_insert(page* pg)
 {
     char* path_name = pg->path_name;
     const unsigned int hash_index = hash_function(path_name, pg->index);
-    hash_entry* new_entry = (hash_entry*)umalloc_dma(sizeof(hash_entry));
+    hash_entry* new_entry = (hash_entry*)malloc(sizeof(hash_entry));
 
     /*Set the information in the hash entry*/
+    new_entry->page_index = pg->index;
+    new_entry->path_name = pg->path_name;
     new_entry->page_ptr = pg;
     new_entry->next = NULL;
     if (hash_table[hash_index] == NULL)
@@ -125,7 +127,7 @@ int hash_table_remove(page* pg)
     // if(hash_index == 59803){
     //     printf("hash index 59803:\n");
     //     while (current) {
-    //         printf("%d\n", current->page_ptr->index);
+    //         printf("%d\n", current->page_index);
     //         current=current->next;
     //     }
     // }
@@ -134,7 +136,7 @@ int hash_table_remove(page* pg)
     // if(hash_index == 189864){
     //     printf("hash index 189864:\n");
     //     while (current) {
-    //         printf("%d\n", current->page_ptr->index);
+    //         printf("%d\n", current->page_index);
     //         current=current->next;
     //     }
     // }
@@ -143,7 +145,7 @@ int hash_table_remove(page* pg)
     /* Check if the entry must be removed; if not, proceed to the next entry */
     while (current)
     {
-        if (strcmp(current->page_ptr->path_name, path_name) == 0 && (current->page_ptr->index == pg->index)) // If the current entry is the target entry
+        if (strcmp(current->path_name, path_name) == 0 && (current->page_index == pg->index)) // If the current entry is the target entry
         {
             if (prev == NULL)
             {
@@ -155,7 +157,7 @@ int hash_table_remove(page* pg)
             }
             find = true; // find the hash entry
             current->next = NULL;
-            ufree(current);
+            free(current);
             break;
         }
         prev = current;
